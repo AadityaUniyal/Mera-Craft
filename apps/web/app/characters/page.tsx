@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import * as THREE from "three";
 import { 
   Bot, 
   Cpu, 
@@ -15,7 +16,8 @@ import {
   Activity, 
   CheckCircle2, 
   Box,
-  Compass
+  Compass,
+  Eye
 } from "lucide-react";
 import { soundSynth } from "@/lib/audio/sound-synth";
 
@@ -25,7 +27,9 @@ interface CharacterModel {
   callsign: string;
   role: string;
   icon: string;
-  color: string;
+  shirtColor: number;
+  pantsColor: number;
+  skinColor: number;
   modelFile: string;
   description: string;
   trainingCurriculum: string;
@@ -48,7 +52,9 @@ const CHARACTERS: CharacterModel[] = [
     callsign: "AGENT_MINER_V6",
     role: "Resource Extraction & Speedrun Economy",
     icon: "⛏️",
-    color: "#0284c7",
+    shirtColor: 0x0284c7, // Cyan/Blue
+    pantsColor: 0x1e3a8a, // Navy
+    skinColor: 0xfde047,
     modelFile: "master_v6_minecraft",
     description: "Trained across 500,000 steps with GAE on full Minecraft crafting graphs. Automatically seeks wood, crafts pickaxes, mines iron, extracts diamonds, and delivers resources to the base hub.",
     trainingCurriculum: "Multi-Tier Speedrun Economy & Crafting Hierarchy",
@@ -63,7 +69,9 @@ const CHARACTERS: CharacterModel[] = [
     callsign: "AGENT_BRIDGER_V6",
     role: "Lava/Water Hazard Traversal & Edge Protection",
     icon: "🧱",
-    color: "#16a34a",
+    shirtColor: 0x16a34a, // Green
+    pantsColor: 0x582f0e, // Brown
+    skinColor: 0xfcd34d,
     modelFile: "master_v6_minecraft",
     description: "Specialized in hazardous terrain navigation. Uses sneak crouching to clamp position to block edges and executes precision block placement to build cobblestone skyways across lava chasms.",
     trainingCurriculum: "Lava Lake Bridging & Safe Sneak Clamping",
@@ -78,7 +86,9 @@ const CHARACTERS: CharacterModel[] = [
     callsign: "AGENT_COMBAT_V5",
     role: "Hostile Mob Defense & Tactical Evasion",
     icon: "🏹",
-    color: "#a855f7",
+    shirtColor: 0x7e22ce, // Purple Knight Armor
+    pantsColor: 0x3b0764, // Dark Obsidian
+    skinColor: 0xe2e8f0,
     modelFile: "master_v5_pro",
     description: "Trained specifically for hostile night survival. Perceives Creeper threat vectors via 4-directional proximity sensors, maintaining a 3-block safety standoff radius while executing counter-strikes.",
     trainingCurriculum: "Night Creeper Proximity Tracking & Tactical Retreat",
@@ -93,7 +103,9 @@ const CHARACTERS: CharacterModel[] = [
     callsign: "AGENT_PARKOUR_V5",
     role: "Precision Velocity Jumping & Mountain Ascent",
     icon: "⚡",
-    color: "#fbbf24",
+    shirtColor: 0xd97706, // Amber Speedrunner
+    pantsColor: 0x1e293b, // Dark Slate
+    skinColor: 0xfde68a,
     modelFile: "master_v5_pro",
     description: "Optimized for maximum traversal speed and gap clearance. Calculates sprint momentum and executes synchronized 1-to-2 block parkour leaps across sheer mountain canyons.",
     trainingCurriculum: "Chasm Gap Precision Leaps & Vertical Ascent",
@@ -106,11 +118,87 @@ const CHARACTERS: CharacterModel[] = [
 
 export default function CharactersPage() {
   const [activeBot, setActiveBot] = useState<CharacterModel>(CHARACTERS[0]);
+  const mountRef = useRef<HTMLDivElement>(null);
+  const botGroupRef = useRef<THREE.Group | null>(null);
 
   const handleSelect = (bot: CharacterModel) => {
     setActiveBot(bot);
     soundSynth.playBlockPlace();
   };
+
+  // 3D Avatar Rendering in Three.js
+  useEffect(() => {
+    if (!mountRef.current) return;
+    const width = mountRef.current.clientWidth;
+    const height = mountRef.current.clientHeight;
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0a0d14);
+
+    const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
+    camera.position.set(0, 1.8, 4.5);
+    camera.lookAt(0, 0.9, 0);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(width, height);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    mountRef.current.appendChild(renderer.domElement);
+
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.85);
+    scene.add(ambientLight);
+
+    const dirLight = new THREE.DirectionalLight(0xfff5dd, 1.3);
+    dirLight.position.set(4, 6, 4);
+    scene.add(dirLight);
+
+    // Floor
+    const grid = new THREE.GridHelper(6, 6, 0x3b4458, 0x1e2330);
+    grid.position.y = -0.01;
+    scene.add(grid);
+
+    // Character Group
+    const group = new THREE.Group();
+    scene.add(group);
+    botGroupRef.current = group;
+
+    // Body
+    const bodyGeo = new THREE.BoxGeometry(0.6, 0.8, 0.4);
+    const bodyMat = new THREE.MeshStandardMaterial({ color: activeBot.shirtColor, roughness: 0.3 });
+    const body = new THREE.Mesh(bodyGeo, bodyMat);
+    body.position.y = 0.8;
+    group.add(body);
+
+    // Head
+    const headGeo = new THREE.BoxGeometry(0.48, 0.48, 0.48);
+    const headMat = new THREE.MeshStandardMaterial({ color: activeBot.skinColor, roughness: 0.5 });
+    const head = new THREE.Mesh(headGeo, headMat);
+    head.position.y = 1.44;
+    group.add(head);
+
+    // Legs
+    const legGeo = new THREE.BoxGeometry(0.24, 0.55, 0.3);
+    const legMat = new THREE.MeshStandardMaterial({ color: activeBot.pantsColor, roughness: 0.5 });
+    const leftLeg = new THREE.Mesh(legGeo, legMat);
+    leftLeg.position.set(-0.15, 0.22, 0);
+    const rightLeg = new THREE.Mesh(legGeo, legMat);
+    rightLeg.position.set(0.15, 0.22, 0);
+    group.add(leftLeg, rightLeg);
+
+    let frameId: number;
+    const animate = () => {
+      frameId = requestAnimationFrame(animate);
+      group.rotation.y += 0.015;
+      renderer.render(scene, camera);
+    };
+    animate();
+
+    return () => {
+      cancelAnimationFrame(frameId);
+      if (mountRef.current && renderer.domElement) {
+        mountRef.current.removeChild(renderer.domElement);
+      }
+    };
+  }, [activeBot]);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 space-y-6 select-none">
@@ -190,41 +278,56 @@ export default function CharactersPage() {
         })}
       </div>
 
-      {/* Deep Character Specification Panel */}
-      <div className="mc-panel-stone p-6 space-y-5">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b-2 border-[#141720] pb-3">
-          <div className="flex items-center gap-3">
-            <span className="text-3xl">{activeBot.icon}</span>
-            <div>
-              <h2 className="font-pixel text-base font-bold text-white">{activeBot.name}</h2>
-              <span className="font-mono text-xs text-[#38bdf8]">{activeBot.role}</span>
-            </div>
+      {/* Deep Character Specification & 3D Avatar Inspector */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* 3D Bot Avatar Viewer */}
+        <div className="mc-panel-stone p-4 flex flex-col justify-between space-y-3">
+          <div className="flex items-center justify-between border-b-2 border-[#141720] pb-2">
+            <span className="font-pixel text-[9px] text-white flex items-center gap-1.5">
+              <Eye className="w-3.5 h-3.5 text-[#34d399]" />
+              <span>3D BOT AVATAR INSPECTOR</span>
+            </span>
+            <span className="font-mono text-[9px] text-[#34d399]">360° Real-time</span>
           </div>
 
-          <div className="flex items-center gap-2">
-            <Link
-              href={`/demo?model=${activeBot.modelFile}`}
-              className="mc-btn mc-btn-diamond text-[9px] px-3 py-1.5"
-            >
-              <Play className="w-3 h-3 fill-current" />
-              <span>SPAWN IN 3D SIMULATION</span>
-            </Link>
+          <div ref={mountRef} className="w-full h-48 rounded bg-[#0b0d13] border border-[#1e2330]" />
+
+          <div className="text-center font-mono text-[10px] text-[#94a3b8]">
+            Skin Profile: <strong className="text-white">{activeBot.name}</strong>
           </div>
         </div>
 
-        {/* Skill Matrix */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="space-y-2 bg-[#12151e] p-4 border-2 border-[#1e2330]">
-            <span className="font-pixel text-[9px] text-[#34d399] block mb-2">
-              NEURAL SKILL POLAR MATRIX:
+        {/* Skill Matrix & Trigger Flow */}
+        <div className="lg:col-span-2 mc-panel-stone p-5 space-y-4">
+          <div className="flex items-center justify-between border-b-2 border-[#141720] pb-2">
+            <div>
+              <h2 className="font-pixel text-xs font-bold text-white flex items-center gap-2">
+                <Cpu className="w-4 h-4 text-[#34d399]" />
+                <span>{activeBot.name} — TECHNICAL SPECIFICATION</span>
+              </h2>
+              <span className="font-mono text-[10px] text-[#38bdf8]">{activeBot.role}</span>
+            </div>
+            <Link
+              href={`/demo?model=${activeBot.modelFile}`}
+              className="mc-btn mc-btn-diamond text-[8px] px-2.5 py-1"
+            >
+              <Play className="w-3 h-3 fill-current" />
+              <span>TEST IN ARENA</span>
+            </Link>
+          </div>
+
+          {/* Skill Polar Matrix */}
+          <div className="space-y-1.5 bg-[#12151e] p-3 border border-[#1e2330]">
+            <span className="font-pixel text-[8px] text-[#34d399] block mb-1">
+              NEURAL CAPABILITY PROFILE:
             </span>
             {Object.entries(activeBot.skills).map(([skill, val]) => (
               <div key={skill} className="space-y-0.5">
-                <div className="flex justify-between font-pixel text-[8px] text-[#94a3b8] uppercase">
+                <div className="flex justify-between font-pixel text-[7px] text-[#94a3b8] uppercase">
                   <span>{skill}:</span>
                   <span className="text-white font-mono">{val}%</span>
                 </div>
-                <div className="h-2 bg-[#0b0d13] border border-[#32394a] overflow-hidden">
+                <div className="h-1.5 bg-[#0b0d13] border border-[#32394a] overflow-hidden">
                   <div
                     className="h-full bg-gradient-to-r from-[#059669] to-[#34d399]"
                     style={{ width: `${val}%` }}
@@ -234,18 +337,14 @@ export default function CharactersPage() {
             ))}
           </div>
 
-          {/* Trigger Logic & Mathematical Decision Flow */}
-          <div className="space-y-3 bg-[#12151e] p-4 border-2 border-[#1e2330]">
-            <span className="font-pixel text-[9px] text-amber-400 block">
-              TRAINED MATHEMATICAL TRIGGER LOGIC:
+          {/* Mathematical Trigger Logic */}
+          <div className="bg-[#12151e] p-3 border border-[#1e2330] font-mono text-xs text-slate-300">
+            <span className="font-pixel text-[8px] text-amber-400 block mb-1">
+              BEHAVIORAL PROXIMITY TRIGGER LOGIC:
             </span>
-            <p className="font-mono text-xs text-slate-200 leading-relaxed bg-[#0b0d13] p-3 border border-[#32394a]">
+            <p className="text-[11px] leading-relaxed text-slate-200">
               {activeBot.triggerLogic}
             </p>
-            <div className="grid grid-cols-2 gap-2 font-mono text-[10px] text-[#94a3b8]">
-              <div>Curriculum: <span className="text-white">{activeBot.trainingCurriculum}</span></div>
-              <div>Model Artifact: <span className="text-[#38bdf8]">{activeBot.modelFile}.onnx</span></div>
-            </div>
           </div>
         </div>
       </div>
