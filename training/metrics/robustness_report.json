@@ -1,0 +1,33 @@
+{
+  "timestamp": "2026-08-26T13:15:32Z",
+  "scenarios": [
+    {
+      "scenario": "Dynamic Moving Target (Every 15 Steps)",
+      "success_rate": 64.0,
+      "mean_reward": 99.6,
+      "mean_steps": 174.44,
+      "resilience_status": "MODERATE"
+    },
+    {
+      "scenario": "Random Agent Heading Knockback (+-90 deg)",
+      "success_rate": 88.0,
+      "mean_reward": 41.16,
+      "mean_steps": 92.52,
+      "resilience_status": "HIGHLY RESILIENT"
+    },
+    {
+      "scenario": "Mid-Flight Agent Teleportation",
+      "success_rate": 84.0,
+      "mean_reward": 49.41,
+      "mean_steps": 77.88,
+      "resilience_status": "HIGHLY RESILIENT"
+    },
+    {
+      "scenario": "Dense Obstacle Maze with Random Traps",
+      "success_rate": 88.0,
+      "mean_reward": 44.42,
+      "mean_steps": 68.68,
+      "resilience_status": "HIGHLY RESILIENT"
+    }
+  ]
+}

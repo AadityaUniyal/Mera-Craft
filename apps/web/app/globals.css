@@ -1,0 +1,259 @@
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Silkscreen:wght@400;700&family=VT323&family=JetBrains+Mono:wght@400;600;800&family=Inter:wght@400;600;700;800;900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --mc-dark-obsidian: #0c0f17;
+  --mc-deepslate: #151a24;
+  --mc-stone-dark: #222836;
+  --mc-stone-light: #3d4659;
+  --mc-stone-border: #4d586f;
+  --mc-gold: #f59e0b;
+  --mc-diamond: #00f0ff;
+  --mc-emerald: #10b981;
+  --mc-redstone: #ef4444;
+  --mc-lapis: #2563eb;
+  --mc-wood: #78350f;
+  --mc-wood-light: #92400e;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  color: #f1f5f9;
+  background: var(--mc-dark-obsidian);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  overflow-x: hidden;
+  image-rendering: pixelated;
+}
+
+.font-pixel {
+  font-family: 'Silkscreen', 'Press Start 2P', monospace;
+}
+
+.font-retro {
+  font-family: 'VT323', monospace;
+}
+
+.font-mono {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* ==========================================================================
+   MINECRAFT BLOCK UI DESIGN SYSTEM
+   ========================================================================== */
+
+/* 1. Minecraft Bevelled Block Buttons */
+.mc-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-family: 'Silkscreen', monospace;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.65rem 1.25rem;
+  background: #3b4252;
+  color: #eceff4;
+  border: 3px solid;
+  border-color: #5e687e #232834 #232834 #5e687e;
+  box-shadow: inset -2px -2px 0px 0px rgba(0, 0, 0, 0.4), inset 2px 2px 0px 0px rgba(255, 255, 255, 0.15);
+  cursor: pointer;
+  transition: all 0.1s ease;
+  user-select: none;
+  text-shadow: 1px 1px 0px #000;
+}
+
+.mc-btn:hover {
+  background: #495163;
+  border-color: #727e99 #1b1f28 #1b1f28 #727e99;
+  color: #ffffff;
+}
+
+.mc-btn:active {
+  border-color: #232834 #5e687e #5e687e #232834;
+  box-shadow: inset 2px 2px 0px 0px rgba(0, 0, 0, 0.6);
+  transform: translate(1px, 1px);
+}
+
+.mc-btn-primary {
+  background: #059669;
+  color: #ecfdf5;
+  border-color: #34d399 #047857 #047857 #34d399;
+  box-shadow: inset -2px -2px 0px 0px rgba(0, 0, 0, 0.4), inset 2px 2px 0px 0px rgba(255, 255, 255, 0.25);
+  text-shadow: 1px 1px 0px #064e3b;
+}
+
+.mc-btn-primary:hover {
+  background: #10b981;
+  border-color: #6ee7b7 #059669 #059669 #6ee7b7;
+  color: #ffffff;
+  box-shadow: 0 0 16px rgba(16, 185, 129, 0.4), inset -2px -2px 0px 0px rgba(0, 0, 0, 0.4);
+}
+
+.mc-btn-diamond {
+  background: #0284c7;
+  color: #f0f9ff;
+  border-color: #38bdf8 #0369a1 #0369a1 #38bdf8;
+  box-shadow: inset -2px -2px 0px 0px rgba(0, 0, 0, 0.4), inset 2px 2px 0px 0px rgba(255, 255, 255, 0.3);
+  text-shadow: 1px 1px 0px #0c4a6e;
+}
+
+.mc-btn-diamond:hover {
+  background: #0ea5e9;
+  border-color: #7dd3fc #0284c7 #0284c7 #7dd3fc;
+  box-shadow: 0 0 16px rgba(14, 165, 233, 0.45);
+}
+
+.mc-btn-gold {
+  background: #d97706;
+  color: #fffbeb;
+  border-color: #fbbf24 #b45309 #b45309 #fbbf24;
+  box-shadow: inset -2px -2px 0px 0px rgba(0, 0, 0, 0.4), inset 2px 2px 0px 0px rgba(255, 255, 255, 0.3);
+  text-shadow: 1px 1px 0px #78350f;
+}
+
+.mc-btn-gold:hover {
+  background: #f59e0b;
+  border-color: #fde68a #d97706 #d97706 #fde68a;
+  box-shadow: 0 0 16px rgba(245, 158, 11, 0.45);
+}
+
+.mc-btn-danger {
+  background: #dc2626;
+  color: #fef2f2;
+  border-color: #f87171 #991b1b #991b1b #f87171;
+  box-shadow: inset -2px -2px 0px 0px rgba(0, 0, 0, 0.4), inset 2px 2px 0px 0px rgba(255, 255, 255, 0.25);
+  text-shadow: 1px 1px 0px #7f1d1d;
+}
+
+.mc-btn-danger:hover {
+  background: #ef4444;
+  border-color: #fca5a5 #dc2626 #dc2626 #fca5a5;
+  box-shadow: 0 0 16px rgba(239, 68, 68, 0.45);
+}
+
+/* 2. Minecraft Panels & Cards */
+.mc-panel-dark {
+  background: rgba(14, 18, 27, 0.92);
+  border: 3px solid;
+  border-color: #3b4458 #111520 #111520 #3b4458;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7), inset 1px 1px 0px rgba(255, 255, 255, 0.08);
+}
+
+.mc-panel-stone {
+  background: #252a38;
+  border: 3px solid;
+  border-color: #4b556d #141720 #141720 #4b556d;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5), inset 2px 2px 0px rgba(255, 255, 255, 0.06);
+}
+
+.mc-panel-obsidian {
+  background: #110d1f;
+  border: 3px solid;
+  border-color: #382856 #0a0712 #0a0712 #382856;
+  box-shadow: 0 8px 32px rgba(88, 28, 135, 0.2), inset 2px 2px 0px rgba(168, 85, 247, 0.15);
+}
+
+.mc-panel-wood {
+  background: #2c1a0e;
+  border: 3px solid;
+  border-color: #5c391f #150c06 #150c06 #5c391f;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
+}
+
+/* 3. Minecraft Hotbar Slots */
+.mc-hotbar {
+  display: flex;
+  gap: 4px;
+  background: #1e2330;
+  padding: 6px;
+  border: 3px solid;
+  border-color: #4a546b #0f121a #0f121a #4a546b;
+}
+
+.mc-slot {
+  width: 44px;
+  height: 44px;
+  background: #12151e;
+  border: 2px solid;
+  border-color: #0b0d13 #32394a #32394a #0b0d13;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transition: all 0.1s ease;
+}
+
+.mc-slot.active {
+  border: 2px solid #fbbf24;
+  box-shadow: 0 0 10px rgba(251, 191, 36, 0.5), inset 0 0 8px rgba(251, 191, 36, 0.2);
+  background: #1a1e2a;
+}
+
+/* 4. Minecraft HUD Bars */
+.mc-xp-bar {
+  height: 10px;
+  background: #12161f;
+  border: 2px solid #000;
+  border-radius: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.mc-xp-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #10b981, #34d399, #10b981);
+  box-shadow: 0 0 8px #10b981;
+}
+
+/* 5. Minecraft Hearts & Hunger */
+.mc-heart {
+  display: inline-block;
+  color: #ef4444;
+  filter: drop-shadow(1px 1px 0px #000);
+}
+
+.mc-drumstick {
+  display: inline-block;
+  color: #f59e0b;
+  filter: drop-shadow(1px 1px 0px #000);
+}
+
+/* 6. Grid Background */
+.mc-bg-grid {
+  background-size: 32px 32px;
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+}
+
+/* 7. Pixel Borders */
+.pixel-border {
+  border: 2px solid #000;
+  outline: 2px solid #3b4458;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: #0f121a;
+  border-left: 2px solid #1c2230;
+}
+::-webkit-scrollbar-thumb {
+  background: #32394a;
+  border: 2px solid;
+  border-color: #4b556d #141720 #141720 #4b556d;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #414a60;
+}

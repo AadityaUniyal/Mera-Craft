@@ -1,0 +1,2952 @@
+# MINDCRAFT — NEW MASTER BLUEPRINT
+## Advanced Embodied-ML Product + Minecraft-Style Full-Screen Game
+### Based on the current uploaded repository + revised product direction
+### Date: 27 August 2026
+### Status: Architecture / implementation master specification
+
+======================================================================
+0. PURPOSE OF THIS DOCUMENT
+======================================================================
+
+This document replaces the earlier "AI game" direction with a clearer
+product architecture.
+
+The project is NOT primarily a Minecraft clone.
+
+The project is an ADVANCED ML PRODUCT presented through a polished,
+Minecraft-inspired voxel world.
+
+The core objective is:
+
+    Build an autonomous embodied-AI system that is trained OFFLINE by
+    the builder, evaluated scientifically, versioned, and then delivered
+    to ordinary users as a finished trained AI experience.
+
+The USER DOES NOT TRAIN THE MODEL.
+
+The user receives:
+    - a finished voxel game/world
+    - trained autonomous AI entities
+    - quests/challenges
+    - AI-driven world behavior
+    - optional explanations of AI behavior
+    - a polished game interface
+
+The BUILDER/ADMIN owns:
+    - training
+    - experiments
+    - curriculum
+    - evaluation
+    - model versions
+    - telemetry analysis
+    - release gates
+    - deployment
+    - rollback
+    - future retraining
+
+The project should therefore be understood as:
+
+    "An embodied-AI laboratory disguised as a polished voxel game."
+
+----------------------------------------------------------------------
+WHY THIS DIRECTION
+----------------------------------------------------------------------
+
+The uploaded repository already contains substantial ML and product
+infrastructure:
+
+    - Python/PyTorch reinforcement-learning training
+    - custom voxel environments
+    - PPO training scripts
+    - multiple environment variants
+    - evaluation and robustness scripts
+    - PyTorch checkpoints
+    - ONNX model artifacts
+    - Next.js + TypeScript
+    - Three.js voxel visualization
+    - browser-side ONNX inference code
+    - Prisma/PostgreSQL schema
+    - authentication API routes
+    - model APIs
+    - telemetry APIs
+    - challenge APIs
+    - admin publish/rollback routes
+    - experiments/evaluation pages
+    - Unity C# bridge/inference files
+
+The repository is therefore NOT starting from zero.
+
+The major problem is not "we need more technologies."
+
+The major problem is that the existing pieces need to become one coherent,
+real product with a strong separation between:
+
+    1. TRAINING
+    2. PRODUCTION INFERENCE
+    3. PRODUCT / DATABASE / USERS
+    4. BUILDER MLOps CONTROL
+
+The uploaded project audit already identifies mocked/hard-coded areas,
+incomplete persistent telemetry, incomplete authentication/RBAC,
+incomplete model-registry integration, and incomplete production
+connections.
+
+Therefore this blueprint focuses on CONNECTING and REFINING the existing
+system instead of throwing it away.
+
+======================================================================
+1. FINAL PRODUCT DEFINITION
+======================================================================
+
+PROJECT NAME:
+    MINDCRAFT
+
+PRODUCT POSITIONING:
+    Adaptive Embodied AI in a Persistent Voxel World
+
+ONE-SENTENCE DESCRIPTION:
+    A browser-based voxel world where autonomous agents execute
+    policies trained locally through reinforcement learning, while the
+    builder continuously evaluates and improves future model versions.
+
+WHAT MAKES IT SPECIAL:
+
+    The user does not open a "training dashboard" and train an AI.
+
+    The user enters a finished world.
+
+    The AI is already trained.
+
+    The AI acts autonomously.
+
+    The AI has measurable capabilities.
+
+    The builder can later train a better brain offline.
+
+    A new approved brain can then be released to users.
+
+This creates a clean real-world ML lifecycle:
+
+    TRAIN
+       ->
+    EVALUATE
+       ->
+    VERSION
+       ->
+    APPROVE
+       ->
+    DEPLOY
+       ->
+    USERS
+       ->
+    TELEMETRY
+       ->
+    ANALYSIS
+       ->
+    NEW TRAINING SCENARIOS
+       ->
+    RETRAIN
+       ->
+    NEW VERSION
+
+======================================================================
+2. THE MOST IMPORTANT ARCHITECTURAL RULE
+======================================================================
+
+NEVER make public users responsible for training the production model.
+
+Users generate useful behavioral telemetry.
+
+That telemetry can become INPUT to a future offline training dataset.
+
+But:
+
+    PUBLIC USER DATA
+          |
+          v
+      VALIDATE
+          |
+          v
+       FILTER
+          |
+          v
+     AGGREGATE
+          |
+          v
+   OFFLINE TRAINING DATA
+          |
+          v
+       TRAIN
+          |
+          v
+      EVALUATE
+          |
+          v
+     RELEASE GATE
+          |
+          v
+   PRODUCTION MODEL
+
+NOT:
+
+    USER ACTION
+        ->
+    LIVE WEIGHT UPDATE
+        ->
+    PRODUCTION AI
+
+This prevents model poisoning, unpredictable behavior, and uncontrolled
+production changes.
+
+======================================================================
+3. CURRENT REPOSITORY — WHAT WE ALREADY HAVE
+======================================================================
+
+Current top-level architecture:
+
+    minecraft/
+    |
+    +-- apps/web/
+    |     Next.js application
+    |
+    +-- training/
+    |     PyTorch environments, models, training, evaluation
+    |
+    +-- models/
+    |     ONNX releases + model metadata
+    |
+    +-- unity/
+    |     C# agent/world/inference bridge
+    |
+    +-- database/
+    |     Prisma database definition
+    |
+    +-- infra/
+    |     Docker infrastructure
+    |
+    +-- .github/
+    |     CI workflow
+    |
+    +-- docs / existing plans / configuration
+
+Important current ML assets include:
+
+    training/environments/
+        voxel_env.py
+        master_voxel_env.py
+        minecraft_voxel_env.py
+        robust_voxel_env.py
+        ultra_voxel_env.py
+
+    training/models/
+        actor_critic.py
+        master_actor_critic.py
+        minecraft_actor_critic.py
+        ultra_actor_critic.py
+
+    training/scripts/
+        train_ppo.py
+        train_master_agent.py
+        train_minecraft_master.py
+        train_robust_agent.py
+        train_ultra_master.py
+
+    training/evaluation/
+        evaluate.py
+        evaluate_master.py
+        evaluate_minecraft_master.py
+        evaluate_robustness.py
+        evaluate_ultra_master.py
+
+    models/release/
+        multiple ONNX versions
+
+    apps/web/lib/ai/
+        browser-inference.ts
+
+The existing browser inference layer already attempts to load ONNX models
+in the browser and contains a fallback simulation. THE FALLBACK MUST NOT
+BE PRESENTED AS A REAL MODEL in the final product.
+
+If the real ONNX model fails to load in production:
+    - show a controlled degraded state
+    - record the failure
+    - never claim the model is running
+    - optionally use a clearly marked deterministic fallback for
+      development only
+
+======================================================================
+4. NEW PRODUCT EXPERIENCE — USER DOES NOT SEE THE ML MACHINERY FIRST
+======================================================================
+
+The product should feel like a GAME.
+
+The ML sophistication should reveal itself through the world.
+
+The user journey:
+
+    LANDING PAGE
+        |
+        v
+    LOGIN / CREATE ACCOUNT
+        |
+        v
+    CREATE / LOAD GAME ID
+        |
+        v
+    WORLD SELECT
+        |
+        v
+    FULL-SCREEN GAME
+        |
+        v
+    EXPLORE
+        |
+        v
+    MEET AI ENTITIES
+        |
+        v
+    QUESTS / CHALLENGES
+        |
+        v
+    AI BEHAVIOR
+        |
+        v
+    PROGRESSION
+        |
+        v
+    OPTIONAL AI EXPLANATION
+        |
+        v
+    SAVE / EXIT
+
+The player should NEVER be forced to understand PPO, ONNX, replay
+buffers, reward functions, or training runs.
+
+Those are builder concerns.
+
+======================================================================
+5. LANDING PAGE UI
+======================================================================
+
+The landing page should be cinematic and minimal.
+
+Visual identity:
+
+    - dark atmospheric sky
+    - voxel mountains
+    - river/lake
+    - warm village lights
+    - subtle teal/cyan technology accents
+    - large MINDCRAFT wordmark
+    - slow camera movement
+    - particles/fireflies
+    - no giant dashboard on the first screen
+
+Layout:
+
+    +------------------------------------------------------------+
+    | MINDCRAFT                                      MENU         |
+    |                                                            |
+    |                  [ CINEMATIC VOXEL WORLD ]                 |
+    |                                                            |
+    |                     M I N D C R A F T                      |
+    |                                                            |
+    |              BUILD. EXPLORE. LEARN.                       |
+    |                                                            |
+    |       A living voxel world powered by trained AI.          |
+    |                                                            |
+    |          [ PLAY NOW ]       [ DISCOVER THE AI ]             |
+    |                                                            |
+    |                    scroll / enter world                    |
+    +------------------------------------------------------------+
+
+Do not expose technical metrics immediately.
+
+The homepage's job is:
+    "I want to enter this world."
+
+======================================================================
+6. LOGIN / ACCOUNT UI
+======================================================================
+
+Login should be simple.
+
+    +------------------------------------------------------+
+    |                      MINDCRAFT                       |
+    |                                                      |
+    |                WELCOME BACK                         |
+    |                                                      |
+    |       Email / Game ID                                |
+    |       [____________________________]                 |
+    |                                                      |
+    |       Password                                       |
+    |       [____________________________]                 |
+    |                                                      |
+    |                   [ ENTER WORLD ]                    |
+    |                                                      |
+    |              Create a new identity                   |
+    |                                                      |
+    +------------------------------------------------------+
+
+Security:
+
+    browser
+       |
+       v
+    server-side auth route
+       |
+       v
+    validate credentials
+       |
+       v
+    secure session
+       |
+       v
+    user record
+
+Never:
+    browser -> database directly
+    browser -> database password
+    browser -> privileged model API
+
+======================================================================
+7. GAME ID / PLAYER IDENTITY
+======================================================================
+
+After registration:
+
+    CREATE YOUR GAME ID
+
+Example:
+
+    VoxelNomad_07
+
+Player chooses:
+    - display name
+    - avatar
+    - appearance
+    - optional profile details
+
+The system creates:
+
+    user_id
+    game_id
+    profile
+    initial player state
+
+The player then sees:
+
+    "Your world is waiting."
+
+======================================================================
+8. WORLD SELECT / CREATE WORLD
+======================================================================
+
+UI:
+
+    +-------------------------------------------------------------+
+    | MY WORLDS                      DISCOVER                     |
+    |                                                             |
+    |  +------------------+   +------------------------------+   |
+    |  |                  |   | RIVERLAND                     |   |
+    |  |    + CREATE      |   | Survival · Day 12             |   |
+    |  |      WORLD       |   | AI population: 14             |   |
+    |  |                  |   | [ ENTER ]                     |   |
+    |  +------------------+   +------------------------------+   |
+    |                                                             |
+    |  +------------------------------+                           |
+    |  | FOREST OUTPOST               |                           |
+    |  | Creative · Day 7             |                           |
+    |  | [ ENTER ]                    |                           |
+    |  +------------------------------+                           |
+    +-------------------------------------------------------------+
+
+World types initially:
+
+    - Training Showcase World
+    - Riverland
+    - Forest Outpost
+    - Challenge World
+
+The player is NOT training the model.
+
+"Training World" is a world where the already-trained model demonstrates
+its capabilities.
+
+======================================================================
+9. LAUNCHING THE ACTUAL GAME
+======================================================================
+
+When the player presses ENTER WORLD:
+
+THE GAME MUST TAKE OVER THE SCREEN.
+
+Do not make the game look like a dashboard embedded inside a website.
+
+Transition:
+
+    website
+       |
+       v
+    fade to black
+       |
+       v
+    world loading
+       |
+       v
+    environment initialization
+       |
+       v
+    full-screen canvas
+       |
+       v
+    GAME MODE
+
+Browser UI outside the game can disappear.
+
+The game becomes:
+
+    100vw x 100vh
+
+except for browser/platform restrictions.
+
+======================================================================
+10. FULL-SCREEN GAME UI
+======================================================================
+
+Target visual style:
+
+    polished voxel adventure
+    + subtle futuristic AI layer
+    + clean HUD
+    + cinematic lighting
+    + responsive camera
+
+Main view:
+
+    +-------------------------------------------------------------+
+    | HP / ENERGY                     DAY 07        MAP            |
+    |                                                             |
+    |                                                             |
+    |                         VOXEL WORLD                         |
+    |                                                             |
+    |                  forest        mountain                     |
+    |                         \                                    |
+    |                    NPC / AI                                 |
+    |                         \                                    |
+    |                ~~~~~ RIVER ~~~~~                            |
+    |                                                             |
+    |                                                             |
+    |             crosshair                                      |
+    |                                                             |
+    |                                                             |
+    | HP ████████   ENERGY ██████                                  |
+    |                                                             |
+    |       [1][2][3][4][5][6][7][8][9]                           |
+    +-------------------------------------------------------------+
+
+HUD elements:
+
+    top-left:
+        player name
+        health
+        stamina/energy
+        status
+
+    top-right:
+        minimap
+        compass
+        time/weather
+
+    bottom:
+        hotbar
+        selected tool
+        interaction prompt
+
+    optional:
+        current quest
+
+The HUD should stay minimal.
+
+======================================================================
+11. WORLD DESIGN
+======================================================================
+
+The first world does not need to be huge.
+
+Recommended:
+
+    128 x 128 logical world
+    compact vertical dimension
+    chunked rendering
+    procedural variations
+
+Regions:
+
+    FOREST
+    RIVER
+    PLAINS
+    MOUNTAIN
+    VILLAGE
+    CAVE
+
+The purpose of the world is to create meaningful AI problems.
+
+Example:
+
+    TREE
+       |
+       v
+    WOOD RESOURCE
+       |
+       v
+    RIVER OBSTACLE
+       |
+       v
+    VILLAGE
+       |
+       v
+    DELIVERY OBJECTIVE
+
+======================================================================
+12. PLAYER GAMEPLAY
+======================================================================
+
+Player capabilities:
+
+    - movement
+    - sprint
+    - jump
+    - mining
+    - placing blocks
+    - inventory
+    - hotbar
+    - crafting
+    - resource collection
+    - interaction
+    - quests
+    - AI interaction
+    - save/load
+
+Do not build hundreds of crafting recipes initially.
+
+The goal is a believable world, not Minecraft parity.
+
+======================================================================
+13. THE AI ENTITIES
+======================================================================
+
+AI entities are the project's real ML showcase.
+
+Each AI entity has:
+
+    identity
+    role
+    current goal
+    state
+    observation
+    policy
+    inventory
+    health
+    memory metadata
+    model version
+    performance statistics
+
+Example:
+
+    NOVA-017
+    Role: Gatherer
+    Model: MindBrain v6
+    Goal: Collect 5 wood
+    Health: 91%
+    Energy: 67%
+
+The player sees NOVA as a normal game character.
+
+The AI Lab sees:
+
+    observation
+    action
+    reward
+    policy confidence
+    model version
+    episode history
+
+======================================================================
+14. AI ROLES
+======================================================================
+
+V1:
+
+    1. Explorer
+    2. Gatherer
+
+V2:
+
+    3. Builder
+    4. Guardian
+
+V3:
+
+    5. Miner
+    6. Scout
+    7. Trader
+
+Do not train seven different brains immediately.
+
+Initially use:
+
+    ONE CORE POLICY
+        +
+    task/role conditioning
+
+Later, compare:
+
+    shared policy
+    vs
+    specialized policies
+
+That comparison itself can become an ML experiment.
+
+======================================================================
+15. CORE ML PROBLEM
+======================================================================
+
+Research question:
+
+    "Can an autonomous embodied agent progressively learn increasingly
+     difficult voxel-world objectives while generalizing to environments
+     it has not seen during training?"
+
+This gives the project a legitimate ML identity.
+
+======================================================================
+16. OBSERVATION SPACE
+======================================================================
+
+The agent should NOT receive the entire rendered world as raw pixels
+initially.
+
+Use structured observations.
+
+Example:
+
+    SELF
+      position
+      orientation
+      health
+      stamina
+      inventory
+      current goal
+
+    LOCAL WORLD
+      front distance
+      left distance
+      right distance
+      ground state
+      resource proximity
+      water proximity
+      hazard proximity
+
+    TARGET
+      relative direction
+      relative distance
+
+    SOCIAL
+      nearby AI count
+      nearby player count
+      base distance
+
+Example conceptual vector:
+
+    [health,
+     stamina,
+     target_distance,
+     target_angle,
+     front_obstacle,
+     left_obstacle,
+     right_obstacle,
+     water_distance,
+     hazard_distance,
+     wood_count,
+     iron_count,
+     base_distance,
+     ... ]
+
+The exact vector size must be defined by the actual environment and model
+rather than claimed in UI.
+
+======================================================================
+17. ACTION SPACE
+======================================================================
+
+Start with a compact discrete action space:
+
+    MOVE_FORWARD
+    MOVE_BACKWARD
+    TURN_LEFT
+    TURN_RIGHT
+    JUMP
+    REST
+    GATHER
+    INTERACT
+
+Later:
+
+    PLACE_BLOCK
+    BRIDGE
+    FLEE
+    CRAFT
+    DEPOSIT
+    COOPERATE
+
+Avoid exploding the action space too early.
+
+======================================================================
+18. PPO TRAINING LOOP
+======================================================================
+
+Official Unity ML-Agents documentation describes the core RL pattern as
+an environment producing observations, an Agent selecting actions, and
+rewards being used to learn a policy. ML-Agents supports PPO, curriculum
+learning, environment parameter randomization, multiple concurrent
+environments, and multi-agent scenarios.
+
+Our conceptual loop:
+
+              OBSERVATION
+                   |
+                   v
+              POLICY NETWORK
+                   |
+                   v
+                ACTION
+                   |
+                   v
+              VOXEL WORLD
+                   |
+                   v
+                REWARD
+                   |
+                   v
+            NEXT OBSERVATION
+                   |
+                   v
+               PPO UPDATE
+                   |
+                   +--------------------+
+                                        |
+                                        v
+                                   repeat
+
+Source basis:
+Unity ML-Agents official training documentation.
+
+======================================================================
+19. REWARD ENGINEERING
+======================================================================
+
+Reward should encourage the objective, not merely movement.
+
+Example:
+
+    +0.1   useful progress
+    +1     discovery
+    +5     resource collected
+    +10    objective completed
+    +3     safe return
+    -0.1   wasted step
+    -1     unnecessary collision
+    -5     severe failure
+    -10    death/episode failure
+
+BUT:
+
+Do not freeze these values forever.
+
+Reward design is part of experimentation.
+
+We need to detect:
+
+    reward hacking
+    looping behavior
+    exploiting edge cases
+    unsafe shortcuts
+
+A real experiment:
+
+    Reward v1
+        ->
+    observed failure
+        ->
+    diagnose
+        ->
+    Reward v2
+        ->
+    compare performance
+
+======================================================================
+20. FIRST TRAINING CURRICULUM
+======================================================================
+
+Lesson 0:
+    reach target
+
+Lesson 1:
+    avoid obstacles
+
+Lesson 2:
+    locate resource
+
+Lesson 3:
+    collect resource
+
+Lesson 4:
+    collect and return
+
+Lesson 5:
+    cross river
+
+Lesson 6:
+    gather under hazards
+
+Lesson 7:
+    survive
+
+Lesson 8:
+    multi-objective task
+
+Lesson 9:
+    cooperate
+
+Lesson 10:
+    unseen procedural world
+
+Curriculum progression can depend on success/reward thresholds.
+
+Official ML-Agents supports curriculum lessons driven by environment
+parameters and completion criteria such as reward/progress.
+
+======================================================================
+21. ENVIRONMENT RANDOMIZATION
+======================================================================
+
+To prevent memorization, randomize:
+
+    tree locations
+    resource locations
+    river width
+    river position
+    obstacle positions
+    spawn location
+    target location
+    hazard locations
+    terrain parameters
+    weather
+    time-of-day parameters
+
+Training:
+
+    WORLD SEED A
+    WORLD SEED B
+    WORLD SEED C
+    WORLD SEED D
+    ...
+
+Evaluation:
+
+    HELD-OUT SEEDS
+    X
+    Y
+    Z
+
+The model must work on worlds it did not memorize.
+
+======================================================================
+22. GENERALIZATION
+======================================================================
+
+The most important evaluation distinction:
+
+    TRAINING WORLD PERFORMANCE
+             !=
+    UNSEEN WORLD PERFORMANCE
+
+Example report:
+
+    Navigation
+        train: 94%
+        unseen: 87%
+
+    Gathering
+        train: 91%
+        unseen: 83%
+
+    River
+        train: 88%
+        unseen: 72%
+
+The project must report REAL values produced by experiments.
+
+Never hard-code impressive numbers into the UI.
+
+======================================================================
+23. CONTINUAL LEARNING
+======================================================================
+
+The user does not continuously train the AI.
+
+THE BUILDER DOES.
+
+Cycle:
+
+    MODEL v1
+       |
+       v
+    OFFLINE SIMULATION
+       |
+       v
+    EXPERIENCE
+       |
+       v
+    FAILURE ANALYSIS
+       |
+       v
+    WEAKNESS DETECTION
+       |
+       v
+    NEW SCENARIOS
+       |
+       v
+    RETRAIN
+       |
+       v
+    MODEL v2
+       |
+       v
+    EVALUATE
+       |
+       v
+    RELEASE GATE
+       |
+       v
+    PRODUCTION
+       |
+       v
+    MODEL v2
+
+This is the "practice makes the model better" mechanism.
+
+======================================================================
+24. REPLAY / EXPERIENCE MEMORY
+======================================================================
+
+Store training experiences separately from product database data.
+
+Experience:
+
+    state
+    action
+    reward
+    next_state
+    done
+    task
+    environment_seed
+    model_version
+
+Categories:
+
+    recent failures
+    high-reward examples
+    rare events
+    difficult scenarios
+    historical examples
+
+Use a replay dataset/buffer.
+
+Do NOT store every simulation frame in Neon.
+
+Neon should store:
+    metadata
+    summaries
+    experiment records
+    model lineage
+    telemetry summaries
+
+Large replay artifacts belong in files/object storage.
+
+======================================================================
+25. CATASTROPHIC FORGETTING DEFENSE
+======================================================================
+
+Suppose:
+
+    v10
+      navigation = excellent
+      gathering = excellent
+      river = weak
+
+We train heavily on river.
+
+Possible result:
+
+    v11
+      river = excellent
+      navigation = worse
+
+We therefore rehearse old skills.
+
+Conceptual batch:
+
+    recent difficult examples
+    +
+    historical important examples
+    +
+    general examples
+
+The exact sampling ratio becomes an experiment.
+
+======================================================================
+26. AUTOMATED WEAKNESS DETECTION
+======================================================================
+
+AI Lab evaluates:
+
+    Navigation        94%
+    Gathering         91%
+    River Crossing    58%
+    Survival          79%
+
+System selects:
+
+    River Crossing
+
+Then:
+
+    identify weak scenario
+          |
+          v
+    generate environment parameters
+          |
+          v
+    run training
+          |
+          v
+    evaluate
+          |
+          v
+    compare against previous model
+
+This is one of the strongest differentiators of the project.
+
+======================================================================
+27. MODEL VERSIONING
+======================================================================
+
+Every model must have:
+
+    model ID
+    version
+    algorithm
+    environment version
+    reward version
+    curriculum version
+    training run
+    Git commit
+    dataset/replay lineage
+    artifact URI
+    SHA-256
+    metrics
+    evaluation
+    status
+    creation time
+
+Example:
+
+    MindBrain
+      v1
+      v2
+      v3
+      v4
+      v5
+
+Statuses:
+
+    CANDIDATE
+    EVALUATION
+    RELEASE_CANDIDATE
+    APPROVED
+    PRODUCTION
+    REJECTED
+    ARCHIVED
+
+The existing Prisma schema already has a model/version concept. It should
+become the actual source of truth instead of a UI-only concept.
+
+======================================================================
+28. MODEL RELEASE PIPELINE
+======================================================================
+
+                    TRAIN
+                      |
+                      v
+                 MODEL v17
+                      |
+                      v
+                 EVALUATION
+                      |
+            +---------+---------+
+            |                   |
+           FAIL                PASS
+            |                   |
+            v                   v
+         REJECT            RELEASE CANDIDATE
+                                |
+                                v
+                         BUILDER APPROVAL
+                                |
+                                v
+                            APPROVED
+                                |
+                                v
+                           PRODUCTION
+                                |
+                                v
+                              USERS
+
+Rollback:
+
+    PRODUCTION v17
+          |
+       failure
+          |
+          v
+    rollback
+          |
+          v
+    PRODUCTION v16
+
+Previous production versions must always remain available.
+
+======================================================================
+29. PRODUCTION INFERENCE
+======================================================================
+
+The deployed product should run the approved trained brain.
+
+Preferred current architecture:
+
+    trained model
+          |
+          v
+        ONNX
+          |
+          v
+    browser inference
+          |
+          v
+      AI entity
+          |
+          v
+       world action
+
+The uploaded project already contains ONNX artifacts and an
+ONNX Runtime Web inference layer.
+
+This is valuable because browser-side inference can avoid a GPU inference
+server for every user.
+
+However:
+
+    The model must be genuinely loaded.
+
+Do not substitute deterministic hand-written behavior while claiming
+"the neural network is running."
+
+======================================================================
+30. USER REQUEST -> AI ACTION
+======================================================================
+
+Example:
+
+Player enters world.
+
+        |
+        v
+World initializes
+        |
+        v
+Current production model loaded
+        |
+        v
+NPC spawned
+        |
+        v
+NPC receives observation
+        |
+        v
+ONNX model predicts action
+        |
+        v
+Action validation
+        |
+        v
+World simulation executes action
+        |
+        v
+NPC state changes
+        |
+        v
+HUD updates
+        |
+        v
+Meaningful telemetry recorded
+
+The AI does NOT call the database for every action.
+
+The game loop stays local and fast.
+
+======================================================================
+31. WHY THE DATABASE IS NOT IN THE GAME LOOP
+======================================================================
+
+BAD:
+
+    NPC action
+       ->
+    database query
+       ->
+    action
+       ->
+    database update
+       ->
+    next frame
+
+This is slow and expensive.
+
+GOOD:
+
+    Browser
+      |
+      +--> local world state
+      |
+      +--> local model inference
+      |
+      +--> local AI decisions
+      |
+      +--> local rendering
+      |
+      +--> periodic meaningful telemetry
+                 |
+                 v
+              backend
+                 |
+                 v
+               Neon
+
+======================================================================
+32. TELEMETRY
+======================================================================
+
+Record meaningful events, not every rendered frame.
+
+Examples:
+
+    SESSION_STARTED
+    WORLD_CREATED
+    AI_SPAWNED
+    AI_GOAL_STARTED
+    AI_GOAL_COMPLETED
+    AI_GOAL_FAILED
+    RESOURCE_COLLECTED
+    RIVER_CROSSED
+    HAZARD_ENCOUNTERED
+    MODEL_LOADED
+    MODEL_LOAD_FAILED
+    MODEL_ACTION_SUMMARY
+    SESSION_ENDED
+
+Telemetry payload can contain:
+
+    model_version
+    task
+    outcome
+    reward
+    steps
+    latency
+    environment_seed/category
+    relevant state summary
+
+Never store unnecessary PII.
+
+======================================================================
+33. DATABASE ARCHITECTURE
+======================================================================
+
+Production database:
+
+    Neon PostgreSQL
+
+ORM:
+
+    Prisma
+
+Core domains:
+
+    Users
+    Profiles
+    Sessions
+    Worlds
+    Model registry
+    Model versions
+    Training runs
+    Evaluations
+    Challenges
+    Challenge scores
+    Telemetry
+    Audit logs
+
+The existing schema already includes many of these concepts.
+
+Future schema additions may include:
+
+    World
+    PlayerWorld
+    AIEntity
+    Quest
+    QuestProgress
+    ModelMetric
+    TrainingDataset
+    ReleaseGate
+    TelemetryAggregate
+
+Only add them when the product actually needs them.
+
+======================================================================
+34. DATABASE SOURCE OF TRUTH
+======================================================================
+
+Neon should become the authoritative product source.
+
+Frontend must NOT contain:
+
+    fake model registry
+    fake telemetry
+    fake production version
+    fake user counts
+    fake evaluation results
+
+Development mocks are acceptable only behind an explicit development
+configuration.
+
+Production must read real data.
+
+======================================================================
+35. SECURITY
+======================================================================
+
+Authentication:
+
+    secure password hashing
+    secure session/token strategy
+    HTTPS
+    server-side validation
+    rate limiting
+
+Authorization:
+
+    USER
+    ADMIN
+    ML_OPERATOR
+    MODERATOR (only if needed)
+
+Admin-only operations:
+
+    publish model
+    rollback model
+    inspect sensitive telemetry
+    manage release gates
+    manage users
+
+Never allow:
+
+    normal user -> publish model
+    browser -> database
+    browser -> provider secret
+    user -> arbitrary model artifact
+    user -> training control
+
+======================================================================
+36. IMPORTANT CREDENTIAL SECURITY
+======================================================================
+
+The uploaded repository contains environment files.
+
+A database connection string/credential has previously been shared in the
+project context.
+
+BEFORE PUBLIC DEPLOYMENT:
+
+    1. ROTATE the Neon database password.
+    2. Replace local credentials.
+    3. Keep credentials in server-side environment variables.
+    4. Never commit .env files.
+    5. Never use NEXT_PUBLIC_DATABASE_URL.
+    6. Never send the connection string to the browser.
+    7. Audit Git history for accidental secret commits.
+
+Use:
+
+    .env
+    .env.local
+
+and commit:
+
+    .env.example
+
+with placeholders only.
+
+======================================================================
+37. LLM ROLE
+======================================================================
+
+Ollama/LLM is OPTIONAL.
+
+It is NOT the RL brain.
+
+Correct:
+
+    RL model
+       |
+       v
+    action
+       |
+       v
+    telemetry
+       |
+       v
+    LLM explanation
+
+Example player question:
+
+    "Why did Nova cross the river?"
+
+Backend sends structured evidence:
+
+    current goal
+    observations
+    selected action
+    recent actions
+    reward changes
+    model version
+
+LLM returns:
+
+    concise evidence-based explanation
+
+The LLM must never invent hidden chain-of-thought.
+
+It explains observable state/telemetry.
+
+======================================================================
+38. UI FOR AI EXPLANATION
+======================================================================
+
+When player selects an AI entity:
+
+    +----------------------------------------------------+
+    | NOVA                                               |
+    | Gatherer                                           |
+    |                                                    |
+    | Current goal: Collect wood                         |
+    | Model: MindBrain v17                               |
+    |                                                    |
+    | [ WATCH ]  [ INTERACT ]  [ WHY? ]                  |
+    +----------------------------------------------------+
+
+Press WHY:
+
+    +----------------------------------------------------+
+    | WHY DID NOVA DO THAT?                              |
+    |                                                    |
+    | Nova detected a nearby river and selected a        |
+    | safer route around the obstacle while continuing   |
+    | toward the current gathering target.               |
+    |                                                    |
+    | Evidence:                                          |
+    |   River distance: 4.2m                             |
+    |   Target direction: 31°                            |
+    |   Hazard level: Low                                |
+    |                                                    |
+    | Model: MindBrain v17                               |
+    +----------------------------------------------------+
+
+This makes the ML visible without exposing internal reasoning.
+
+======================================================================
+39. AI LAB — BUILDER ONLY
+======================================================================
+
+URL concept:
+
+    /admin/ai-lab
+
+Navigation:
+
+    OVERVIEW
+    TRAINING
+    DATA
+    AGENTS
+    EXPERIMENTS
+    EVALUATION
+    MODELS
+    DEPLOYMENT
+    TELEMETRY
+    SETTINGS
+
+Overview:
+
+    +--------------------------------------------------------------+
+    | MINDCRAFT AI LAB                              SYSTEM ONLINE   |
+    +--------------------------------------------------------------+
+    |                                                              |
+    | PRODUCTION MODEL       OVERALL SUCCESS       GENERALIZATION  |
+    | MindBrain v17          REAL METRIC           REAL METRIC     |
+    |                                                              |
+    | ----------------------------------------------------------   |
+    | SKILLS                                                       |
+    | Navigation       ████████████████████                        |
+    | Gathering        ███████████████████                         |
+    | River            ███████████████                             |
+    | Survival         █████████████████                           |
+    |                                                              |
+    | CURRENT WEAKNESS: River Crossing                            |
+    |                                                              |
+    | [ OPEN TRAINING ]   [ COMPARE MODELS ]                       |
+    +--------------------------------------------------------------+
+
+======================================================================
+40. AI LAB — TRAINING SCREEN
+======================================================================
+
+The training screen is NOT available to ordinary players.
+
+Example:
+
+    TRAINING RUN #184
+
+    Algorithm: PPO
+    Environment: River Curriculum
+    Model: Candidate v18
+
+    Episodes             1,248,932
+    Timesteps            148M
+    Current lesson       5 / 10
+
+    Reward
+       graph
+
+    Success
+       graph
+
+    Loss
+       graph
+
+    Environment randomization
+       ON
+
+    Replay
+       recent failures + historical rehearsal
+
+    [ STOP TRAINING ]
+
+All numbers are live values from the training system.
+
+======================================================================
+41. AI LAB — EXPERIMENTS
+======================================================================
+
+Each experiment must answer a question.
+
+Examples:
+
+    EXP-001
+    Does curriculum learning improve convergence?
+
+    EXP-002
+    Does environment randomization improve unseen-world
+    generalization?
+
+    EXP-003
+    Does replay rehearsal reduce catastrophic forgetting?
+
+    EXP-004
+    Shared policy vs specialized policies?
+
+    EXP-005
+    Structured observations vs visual observations?
+
+The UI should show:
+
+    hypothesis
+    baseline
+    treatment
+    training configuration
+    results
+    statistical/metric comparison
+    conclusion
+    artifact/model version
+
+======================================================================
+42. MODEL COMPARISON
+======================================================================
+
+Example UI:
+
+    MODEL COMPARISON
+
+                    v14      v17      CHANGE
+
+    Navigation       88%      94%      +6
+    Gathering        81%      91%     +10
+    River            41%      63%     +22
+    Survival         69%      82%     +13
+
+    Unseen Worlds     71%      86%     +15
+
+Numbers must come from evaluation data.
+
+No fake values.
+
+======================================================================
+43. EVALUATION GATES
+======================================================================
+
+A model cannot be released simply because training reward increased.
+
+Gate:
+
+    TRAINING COMPLETE
+          |
+          v
+    UNIT TESTS
+          |
+          v
+    STANDARD BENCHMARK
+          |
+          v
+    HELD-OUT WORLDS
+          |
+          v
+    RANDOMIZED WORLDS
+          |
+          v
+    REGRESSION TEST
+          |
+          v
+    INFERENCE LATENCY
+          |
+          v
+    SAFETY / FAILURE CHECK
+          |
+          v
+    RELEASE DECISION
+
+If any critical gate fails:
+
+    REJECT
+
+======================================================================
+44. ADMIN DEPLOYMENT UI
+======================================================================
+
+    DEPLOY MODEL
+
+    Candidate:
+        MindBrain v18
+
+    Evaluation:
+        PASS
+
+    Generalization:
+        PASS
+
+    Regression:
+        PASS
+
+    Runtime latency:
+        PASS
+
+    Previous production:
+        v17
+
+    [ DEPLOY v18 ]
+
+After deploy:
+
+    audit log
+    timestamp
+    actor
+    model version
+    release reason
+
+Rollback:
+
+    [ ROLLBACK TO v17 ]
+
+======================================================================
+45. PLAYER / ADMIN SEPARATION
+======================================================================
+
+PLAYER:
+
+    Landing
+    Login
+    Game ID
+    Worlds
+    Full-screen game
+    Quests
+    Inventory
+    AI interaction
+    Profile
+    Replay (optional)
+
+ADMIN:
+
+    AI Lab
+    Training
+    Experiments
+    Evaluation
+    Models
+    Deployment
+    Telemetry
+    Audit logs
+    User/world management
+
+There must be no visual ambiguity.
+
+The player should feel like they are playing a world.
+
+The builder should feel like they are operating an ML laboratory.
+
+======================================================================
+46. FRONTEND ARCHITECTURE
+======================================================================
+
+Existing direction:
+
+    Next.js
+    TypeScript
+    Tailwind
+    Three.js
+    ONNX Runtime Web
+
+Keep this for the current web product unless a future performance
+requirement proves that a Unity WebGL build is substantially better.
+
+Why:
+
+    The uploaded repository already has a functioning browser-oriented
+    Three.js voxel layer and ONNX Runtime Web inference path.
+
+Do NOT switch frameworks merely for aesthetics.
+
+The project's main problem is product integration and correctness.
+
+Proposed frontend layers:
+
+    apps/web/
+    |
+    +-- app/
+    |    landing
+    |    auth
+    |    worlds
+    |    game
+    |    profile
+    |    admin
+    |
+    +-- components/
+    |    game/
+    |    hud/
+    |    inventory/
+    |    quests/
+    |    ai/
+    |    lab/
+    |
+    +-- lib/
+         auth
+         api
+         inference
+         telemetry
+         world
+         state
+
+Three.js owns:
+    world rendering
+    camera
+    voxel scene
+    lighting
+    animation
+
+React owns:
+    menus
+    HUD
+    inventory
+    quests
+    overlays
+    admin screens
+
+Do not constantly re-render React state at frame rate.
+
+======================================================================
+47. GAME LOOP VS REACT LOOP
+======================================================================
+
+GAME LOOP:
+
+    requestAnimationFrame
+        |
+        v
+    world simulation
+        |
+        v
+    AI inference
+        |
+        v
+    rendering
+
+REACT:
+
+    UI state
+    inventory
+    quest state
+    selected NPC
+    menus
+    admin dashboards
+
+Use a state bridge between them.
+
+Do not push every Three.js frame through React.
+
+======================================================================
+48. BACKEND ARCHITECTURE
+======================================================================
+
+Current Next.js API routes can handle product APIs.
+
+Use:
+
+    Next.js route handlers
+        |
+        +--> auth
+        +--> worlds
+        +--> sessions
+        +--> models
+        +--> telemetry
+        +--> challenges
+        +--> analytics
+        +--> admin
+
+FastAPI/Python should be introduced only when a long-running ML or
+Python-native workload genuinely requires it.
+
+Do not create a second backend just because "AI projects use FastAPI."
+
+Keep architecture simple until load/ML workloads justify separation.
+
+======================================================================
+49. REQUEST FLOW — NORMAL USER
+======================================================================
+
+Browser
+   |
+   | POST /api/auth/login
+   v
+Next.js server
+   |
+   v
+validate
+   |
+   v
+database
+   |
+   v
+session
+   |
+   v
+browser
+
+Then:
+
+Browser
+   |
+   | GET /api/worlds
+   v
+server
+   |
+   v
+Neon
+   |
+   v
+world metadata
+   |
+   v
+browser
+
+Then:
+
+Browser
+   |
+   | load approved model metadata
+   v
+server
+   |
+   v
+model artifact location
+   |
+   v
+browser
+   |
+   v
+ONNX Runtime Web
+   |
+   v
+local inference
+
+======================================================================
+50. REQUEST FLOW — AI ACTION
+======================================================================
+
+                GAME WORLD
+                     |
+                     v
+              observation vector
+                     |
+                     v
+               ONNX inference
+                     |
+                     v
+                action logits
+                     |
+                     v
+              selected action
+                     |
+                     v
+             action validator
+                     |
+                     v
+              world simulation
+                     |
+                     v
+               state update
+                     |
+                     v
+              meaningful event
+                     |
+                     v
+               telemetry API
+                     |
+                     v
+                  Neon
+
+The database is NOT involved in the actual AI decision.
+
+======================================================================
+51. REQUEST FLOW — ADMIN PUBLISH
+======================================================================
+
+Admin browser
+     |
+     v
+POST /api/admin/publish
+     |
+     v
+authentication
+     |
+     v
+RBAC check
+     |
+     v
+candidate model lookup
+     |
+     v
+release gate validation
+     |
+     v
+database transaction
+     |
+     v
+production version updated
+     |
+     v
+audit log
+     |
+     v
+response
+
+If validation fails:
+
+    NO DEPLOYMENT
+
+======================================================================
+52. TRAINING ARCHITECTURE
+======================================================================
+
+LOCAL MACHINE:
+
+    training/
+        |
+        v
+    environment
+        |
+        v
+    agent
+        |
+        v
+    PPO
+        |
+        v
+    checkpoints
+        |
+        v
+    evaluation
+        |
+        v
+    ONNX export
+        |
+        v
+    model artifact
+
+Then:
+
+    artifact
+        |
+        v
+    model registry metadata
+        |
+        v
+    release candidate
+        |
+        v
+    admin approval
+        |
+        v
+    production
+
+======================================================================
+53. LOCAL TRAINING SAFETY
+======================================================================
+
+The laptop is for offline training.
+
+Do not run:
+
+    maximum GPU load
+    indefinitely
+    with uncontrolled parallel environments
+
+Use:
+
+    bounded training runs
+    monitoring
+    temperature awareness
+    sensible concurrency
+    periodic checkpoints
+    automatic stop conditions
+
+Training should be reproducible.
+
+Record:
+
+    random seed
+    code commit
+    environment version
+    reward version
+    hyperparameters
+    model architecture
+    dataset/replay version
+
+======================================================================
+54. MODEL ARTIFACT STRATEGY
+======================================================================
+
+Repository:
+
+    small metadata files
+
+Artifact storage:
+
+    ONNX files / large checkpoints
+
+Model metadata:
+
+    Neon
+
+Example metadata:
+
+    modelVersion:
+        v18
+
+    status:
+        RELEASE_CANDIDATE
+
+    artifact:
+        object storage reference
+
+    sha256:
+        hash
+
+    trainingRun:
+        run-184
+
+    evaluation:
+        eval-184
+
+Do not store large ONNX binaries directly inside PostgreSQL.
+
+======================================================================
+55. DOCKER
+======================================================================
+
+KEEP DOCKER.
+
+Docker should make development reproducible.
+
+Potential services:
+
+    web
+    optional backend worker
+    local database (development only)
+    redis (if actually required)
+    ML service (development/training support)
+
+Production can use:
+
+    Vercel
+    Neon
+    object storage
+    separate training machine
+
+Docker is NOT the training engine.
+
+It is the reproducibility/container layer.
+
+======================================================================
+56. DEPLOYMENT
+======================================================================
+
+PUBLIC:
+
+    Vercel
+        |
+        v
+    Next.js product
+        |
+        v
+    Neon PostgreSQL
+
+MODEL:
+
+    approved ONNX artifact
+        |
+        v
+    browser
+        |
+        v
+    ONNX Runtime Web
+
+TRAINING:
+
+    developer laptop
+        |
+        v
+    offline training
+        |
+        v
+    candidate model
+
+The deployed application must continue working when the training laptop
+is turned OFF.
+
+This is a critical definition of done.
+
+======================================================================
+57. LIVE USERS AND FUTURE MODEL IMPROVEMENT
+======================================================================
+
+User activity can help the builder.
+
+Example:
+
+    50,000 AI episodes across users
+
+Analysis:
+
+    River crossing failure increased
+    during narrow-river scenarios.
+
+System:
+
+    identify pattern
+       |
+       v
+    create offline dataset slice
+       |
+       v
+    create training curriculum
+       |
+       v
+    train v19
+       |
+       v
+    evaluate
+       |
+       v
+    publish if better
+
+This is "learning from production experience" without live weight updates.
+
+======================================================================
+58. FULL CONTINUAL-IMPROVEMENT DIAGRAM
+======================================================================
+
+                         +------------------+
+                         | CURRENT MODEL    |
+                         |      v18         |
+                         +--------+---------+
+                                  |
+                                  v
+                         +------------------+
+                         | USERS + OFFLINE  |
+                         | SIMULATION       |
+                         +--------+---------+
+                                  |
+                                  v
+                         +------------------+
+                         | TELEMETRY /      |
+                         | EXPERIENCE       |
+                         +--------+---------+
+                                  |
+                                  v
+                         +------------------+
+                         | ANALYZE FAILURES |
+                         +--------+---------+
+                                  |
+                                  v
+                         +------------------+
+                         | FIND WEAK SKILL  |
+                         +--------+---------+
+                                  |
+                                  v
+                         +------------------+
+                         | GENERATE TRAINING|
+                         | SCENARIOS        |
+                         +--------+---------+
+                                  |
+                                  v
+                         +------------------+
+                         | LOCAL PPO TRAIN  |
+                         +--------+---------+
+                                  |
+                                  v
+                         +------------------+
+                         | MODEL v19        |
+                         +--------+---------+
+                                  |
+                                  v
+                         +------------------+
+                         | HELD-OUT TESTS   |
+                         +--------+---------+
+                                  |
+                          +-------+-------+
+                          |               |
+                         FAIL            PASS
+                          |               |
+                          v               v
+                       ARCHIVE        APPROVAL
+                                          |
+                                          v
+                                     PRODUCTION
+                                          |
+                                          +-----> users
+
+======================================================================
+59. USER EXPERIENCE + AI EXPERIENCE TOGETHER
+======================================================================
+
+PLAYER:
+
+    enters world
+       |
+       v
+    sees NPC
+       |
+       v
+    NPC behaves intelligently
+       |
+       v
+    NPC completes task
+       |
+       v
+    player interacts
+       |
+       v
+    world feels alive
+
+UNDER THE HOOD:
+
+    observation
+       |
+       v
+    trained policy
+       |
+       v
+    action
+       |
+       v
+    reward/telemetry
+       |
+       v
+    future model improvement
+
+The player experiences the RESULT of ML.
+
+The builder controls the PROCESS.
+
+======================================================================
+60. WHAT MAKES THIS AN ADVANCED ML PROJECT
+======================================================================
+
+The resume should NOT say:
+
+    "I built a Minecraft game."
+
+It should say something closer to:
+
+    "Built MINDCRAFT, an embodied-AI platform presented as a browser-based
+     voxel world, where autonomous agents are trained with PPO, evaluated
+     on held-out procedural environments, exported for runtime inference,
+     versioned through an MLOps release pipeline, and improved through
+     offline continual-learning cycles driven by telemetry and failure
+     analysis."
+
+Core technical areas:
+
+    Reinforcement learning
+    PPO
+    Reward engineering
+    Curriculum learning
+    Environment randomization
+    Generalization
+    Robustness
+    Continual learning
+    Experience replay
+    Model export
+    ONNX inference
+    MLOps
+    Model versioning
+    Evaluation gates
+    Rollback
+    Telemetry
+    PostgreSQL
+    Authentication
+    RBAC
+    3D rendering
+    Browser inference
+    Production deployment
+
+======================================================================
+61. IMPORTANT — DO NOT FAKE ML
+======================================================================
+
+The current browser inference code contains a deterministic fallback
+behavior when the ONNX session is unavailable.
+
+That is useful for development, but it must not be represented as learned
+behavior.
+
+Production rules:
+
+    REAL MODEL LOADED
+        ->
+    show "AI MODEL ACTIVE"
+
+    MODEL LOAD FAILED
+        ->
+    show controlled degraded state
+
+Never:
+
+    heuristic fallback
+        +
+    "confidence 87%"
+        +
+    "AI model active"
+
+That would undermine the entire project.
+
+======================================================================
+62. IMPORTANT — DO NOT FAKE METRICS
+======================================================================
+
+The current UI has benchmark-style values and the database has evaluation
+fields.
+
+Those values must eventually be generated from actual experiments.
+
+Pipeline:
+
+    training
+      ->
+    evaluation script
+      ->
+    JSON/metrics
+      ->
+    database
+      ->
+    dashboard
+
+Not:
+
+    developer
+      ->
+    hard-coded "94.2%"
+      ->
+    dashboard
+
+======================================================================
+63. IMPORTANT — DO NOT BUILD EVERYTHING AT ONCE
+======================================================================
+
+Implementation order:
+
+PHASE 1
+    Make ONE RL task genuinely learn.
+
+PHASE 2
+    Make the browser world display the trained policy.
+
+PHASE 3
+    Make full-screen game UX polished.
+
+PHASE 4
+    Connect real authentication and database.
+
+PHASE 5
+    Connect telemetry.
+
+PHASE 6
+    Add evaluation/generalization.
+
+PHASE 7
+    Add curriculum and environment randomization.
+
+PHASE 8
+    Add model registry/release gates.
+
+PHASE 9
+    Add continual-improvement pipeline.
+
+PHASE 10
+    Add AI Lab.
+
+PHASE 11
+    Add optional LLM explanation.
+
+PHASE 12
+    Deploy.
+
+Do NOT reverse this and build a giant UI before proving the AI.
+
+======================================================================
+64. DEFINITION OF DONE — MVP
+======================================================================
+
+MVP is complete when:
+
+    [ ] User can register/login.
+    [ ] User receives a Game ID.
+    [ ] User can enter a world.
+    [ ] World is full-screen.
+    [ ] Player can move.
+    [ ] World has forest + river + resources.
+    [ ] AI entity exists.
+    [ ] AI entity is controlled by a REAL trained policy.
+    [ ] Agent can complete one meaningful task.
+    [ ] Model works without training running.
+    [ ] Model works in the browser.
+    [ ] Model version is identifiable.
+    [ ] Telemetry is persisted.
+    [ ] Neon is the source of truth.
+    [ ] Admin can see the model.
+    [ ] Admin can evaluate/publish/rollback.
+    [ ] No production secrets reach browser.
+    [ ] No fake metrics are displayed.
+
+======================================================================
+65. DEFINITION OF DONE — ADVANCED RELEASE
+======================================================================
+
+    [ ] Multiple tasks
+    [ ] Curriculum
+    [ ] Environment randomization
+    [ ] Held-out environments
+    [ ] Generalization benchmark
+    [ ] Robustness benchmark
+    [ ] Replay/experience dataset
+    [ ] Continual retraining
+    [ ] Weakness detection
+    [ ] Model comparison
+    [ ] Model lineage
+    [ ] Release gates
+    [ ] Rollback
+    [ ] AI Lab
+    [ ] Live telemetry analytics
+    [ ] AI explanations
+    [ ] Challenge system
+    [ ] Player progression
+    [ ] polished full-screen game
+    [ ] performance optimization
+    [ ] CI/CD
+    [ ] monitoring
+    [ ] security hardening
+
+======================================================================
+66. FINAL END-TO-END ARCHITECTURE
+======================================================================
+
+                               MINDCRAFT
+                                   |
+              +--------------------+--------------------+
+              |                    |                    |
+              v                    v                    v
+        PUBLIC GAME          AI TRAINING LAB         MLOPS
+              |                    |                    |
+          Next.js             Python/PyTorch          Registry
+          Three.js                 PPO                 Evaluation
+          WebGL                 Simulation             Release
+              |                    |                    |
+              v                    v                    v
+        FULL-SCREEN            MODEL vX            Approved Model
+         VOXEL WORLD                |                    |
+              |                     v                    |
+              |                   ONNX                   |
+              |                     |                    |
+              |                     +---------+----------+
+              |                               |
+              v                               v
+         AI ENTITY --------------------> PRODUCTION
+              |                         INFERENCE
+              |
+              v
+        TELEMETRY
+              |
+              v
+        NEXT.JS API
+              |
+              v
+        NEON POSTGRES
+              |
+              v
+        AI LAB ANALYTICS
+              |
+              v
+        FAILURE ANALYSIS
+              |
+              v
+        NEW SCENARIOS
+              |
+              v
+        LOCAL TRAINING
+              |
+              +----------------------> MODEL vX+1
+
+======================================================================
+67. FINAL ARCHITECTURAL PRINCIPLE
+======================================================================
+
+THREE SYSTEMS MUST REMAIN SEPARATE:
+
+1. LEARN
+
+    Your laptop / training machine.
+
+    It creates better brains.
+
+2. THINK / ACT
+
+    The deployed model.
+
+    It runs inference for users.
+
+3. SERVE / MANAGE
+
+    Web application + database + telemetry + model registry + admin.
+
+    It delivers and governs the experience.
+
+Therefore:
+
+    LAPTOP OFF
+        !=
+    MINDCRAFT OFF
+
+The laptop can be offline.
+
+The deployed product still serves the latest approved brain.
+
+When a better brain exists:
+
+    train
+      ->
+    evaluate
+      ->
+    approve
+      ->
+    publish
+      ->
+    monitor
+      ->
+    rollback if necessary
+
+======================================================================
+68. FINAL BUILD MAP
+======================================================================
+
+STEP 01
+    Audit existing code and remove fake/temporary behavior.
+
+STEP 02
+    Prove the real ONNX model can control the browser agent.
+
+STEP 03
+    Build the first complete playable world.
+
+STEP 04
+    Implement login/Game ID/world persistence.
+
+STEP 05
+    Make game launch into a true full-screen experience.
+
+STEP 06
+    Connect player/NPC/game state cleanly.
+
+STEP 07
+    Persist meaningful telemetry.
+
+STEP 08
+    Connect real model registry.
+
+STEP 09
+    Build held-out evaluation.
+
+STEP 10
+    Build curriculum.
+
+STEP 11
+    Build randomized environments.
+
+STEP 12
+    Build continual training pipeline.
+
+STEP 13
+    Build model release gates.
+
+STEP 14
+    Build AI Lab.
+
+STEP 15
+    Add optional LLM explanations.
+
+STEP 16
+    Harden security.
+
+STEP 17
+    Optimize browser performance.
+
+STEP 18
+    Deploy.
+
+STEP 19
+    Run real users.
+
+STEP 20
+    Analyze real telemetry.
+
+STEP 21
+    Train the next model offline.
+
+STEP 22
+    Release the next brain.
+
+======================================================================
+69. THE FINAL PRODUCT IN ONE DIAGRAM
+======================================================================
+
+                         PLAYER
+                           |
+                           v
+                     LOGIN / GAME ID
+                           |
+                           v
+                      WORLD SELECT
+                           |
+                           v
+                 +-------------------+
+                 | FULL-SCREEN GAME  |
+                 |                   |
+                 |  FOREST           |
+                 |       RIVER       |
+                 |          VILLAGE   |
+                 |       AI ENTITY   |
+                 |                   |
+                 +---------+---------+
+                           |
+                           v
+                    TRAINED AI BRAIN
+                           |
+                           v
+                    LOCAL INFERENCE
+                           |
+                           v
+                       ACTION
+                           |
+                           v
+                     WORLD CHANGES
+                           |
+                           v
+                     PLAYER SEES
+                           |
+                           v
+                    TELEMETRY EVENT
+                           |
+                           v
+                         NEON
+                           |
+                           v
+                      AI LAB
+                           |
+                           v
+                    FAILURE ANALYSIS
+                           |
+                           v
+                   NEW TRAINING DATA
+                           |
+                           v
+                    LOCAL PPO TRAINING
+                           |
+                           v
+                      MODEL vNext
+                           |
+                           v
+                     EVALUATION
+                           |
+                    +------+------+
+                    |             |
+                  FAIL           PASS
+                    |             |
+                    v             v
+                 ARCHIVE       APPROVE
+                                  |
+                                  v
+                              PUBLISH
+                                  |
+                                  v
+                              PLAYERS
+
+======================================================================
+70. FINAL PROJECT PHILOSOPHY
+======================================================================
+
+The project should feel:
+
+    TO THE PLAYER:
+        "This is a beautiful living voxel game."
+
+    TO THE HR:
+        "This person built a serious embodied-AI system."
+
+    TO THE ML INTERVIEWER:
+        "They understand PPO, observations, actions, reward shaping,
+         curriculum, generalization, continual learning and evaluation."
+
+    TO THE SOFTWARE ENGINEER:
+        "They understand frontend, backend, database, security,
+         inference and production architecture."
+
+    TO THE MLOps INTERVIEWER:
+        "They understand model lineage, release gates, deployment,
+         telemetry and rollback."
+
+The visual game is the hook.
+
+The trained agent is the demonstration.
+
+The ML experiments are the substance.
+
+The MLOps pipeline is the engineering proof.
+
+======================================================================
+71. SOURCE BASIS / DESIGN NOTES
+======================================================================
+
+This blueprint incorporates the current uploaded repository structure and
+the previously generated MINDCRAFT project plans.
+
+The ML architecture is also aligned with the current official
+Unity ML-Agents documentation, which supports:
+    - PPO
+    - curriculum learning
+    - environment parameter randomization
+    - concurrent environments
+    - multi-agent training
+    - custom learning environments
+    - Python-driven training
+
+Important implementation principle:
+    Use the existing repository where it is already strong. Do not migrate
+    to another rendering/game framework merely for visual reasons unless
+    actual profiling proves the migration is necessary.
+
+======================================================================
+72. FINAL "DO NOT DO" LIST
+======================================================================
+
+DO NOT:
+
+    - build infinite Minecraft
+    - train live from arbitrary users
+    - put DB credentials in frontend code
+    - put provider API keys in browser code
+    - use fake metrics
+    - claim heuristic fallback is neural inference
+    - store every frame in Neon
+    - make database calls every AI frame
+    - expose admin model controls to users
+    - publish an untested model
+    - evaluate only on training worlds
+    - let an LLM replace the RL policy
+    - add microservices without a real need
+    - build a huge UI before the AI works
+    - start with cloud training
+    - optimize for "more features" instead of measurable learning
+
+DO:
+
+    - prove learning first
+    - measure learning
+    - test generalization
+    - version models
+    - separate training from inference
+    - persist real product data
+    - use release gates
+    - retain rollback versions
+    - keep training local initially
+    - make the user experience game-first
+    - make the builder experience ML-first
+    - continuously improve only through controlled offline training
+
+======================================================================
+END OF MINDCRAFT NEW MASTER BLUEPRINT
+======================================================================

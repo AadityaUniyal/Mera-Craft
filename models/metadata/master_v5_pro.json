@@ -1,0 +1,25 @@
+{
+  "model_name": "MINDCRAFT Ultra Master Embodied Brain (v5 Pro)",
+  "version": "v5.0.0-pro",
+  "framework": "PyTorch PPO Residual -> ONNX Opset 14",
+  "observation_dim": 36,
+  "action_dim": 8,
+  "actions": [
+    "Forward",
+    "Backward",
+    "Turn Left",
+    "Turn Right",
+    "Jump/Climb",
+    "Harvest",
+    "Deposit/Craft",
+    "Rest/Stabilize"
+  ],
+  "features": [
+    "36-dim observation with temporal velocity & height deltas",
+    "Potential-field hazard repulsion barrier",
+    "Residual feature fusion blocks with LayerNorm",
+    "9-stage adaptive curriculum mastery"
+  ],
+  "sha256": "986ea7a6b0ae15cdf805df3ffc9ac292d898f7323c8efedd71f3a90ec1c1b974",
+  "created_at": "2026-08-26T15:30:00Z"
+}

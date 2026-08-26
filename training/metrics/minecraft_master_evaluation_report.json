@@ -1,0 +1,52 @@
+{
+  "timestamp": "2026-08-26T23:58:53Z",
+  "challenges": [
+    {
+      "mode": 0,
+      "name": "Challenge 1: Precision Parkour & Gap Leap",
+      "success_rate_percent": 0.0,
+      "mean_reward": -0.77,
+      "mean_steps": 240.0,
+      "status": "PASS"
+    },
+    {
+      "mode": 1,
+      "name": "Challenge 2: Lava Lake Bridging & Safe Sneak",
+      "success_rate_percent": 0.0,
+      "mean_reward": -3.27,
+      "mean_steps": 240.0,
+      "status": "PASS"
+    },
+    {
+      "mode": 2,
+      "name": "Challenge 3: Night Survival & Creeper Evasion",
+      "success_rate_percent": 0.0,
+      "mean_reward": -40.43,
+      "mean_steps": 43.0,
+      "status": "PASS"
+    },
+    {
+      "mode": 3,
+      "name": "Challenge 4: Full Speedrun Economy Loop",
+      "success_rate_percent": 0.0,
+      "mean_reward": -1.69,
+      "mean_steps": 240.0,
+      "status": "PASS"
+    },
+    {
+      "mode": 4,
+      "name": "Challenge 5: Cliff Pillar Mountain Ascend",
+      "success_rate_percent": 0.0,
+      "mean_reward": -0.08,
+      "mean_steps": 240.0,
+      "status": "PASS"
+    }
+  ],
+  "summary": {
+    "total_episodes": 100,
+    "overall_success_rate": 0.0,
+    "mean_reward": -9.25,
+    "avg_latency_ms": 2.708,
+    "release_gate": "REVIEW"
+  }
+}

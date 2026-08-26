@@ -1,0 +1,51 @@
+{
+  "timestamp": "2026-08-26T13:00:43Z",
+  "device": "cuda",
+  "levels": {
+    "level_0": {
+      "curriculum_level": 0,
+      "grid_size": 10,
+      "episodes": 20,
+      "success_rate_percent": 100.0,
+      "mean_reward": 26.87,
+      "mean_steps": 13.6,
+      "total_collisions": 0
+    },
+    "level_1": {
+      "curriculum_level": 1,
+      "grid_size": 12,
+      "episodes": 20,
+      "success_rate_percent": 100.0,
+      "mean_reward": 29.49,
+      "mean_steps": 19.65,
+      "total_collisions": 0
+    },
+    "level_2": {
+      "curriculum_level": 2,
+      "grid_size": 14,
+      "episodes": 20,
+      "success_rate_percent": 95.0,
+      "mean_reward": 46.5,
+      "mean_steps": 68.5,
+      "total_collisions": 175
+    },
+    "level_3": {
+      "curriculum_level": 3,
+      "grid_size": 16,
+      "episodes": 20,
+      "success_rate_percent": 85.0,
+      "mean_reward": 58.52,
+      "mean_steps": 117.55,
+      "total_collisions": 140
+    }
+  },
+  "summary": {
+    "total_episodes": 80,
+    "overall_success_rate": 95.0,
+    "generalization_score": 93.33,
+    "mean_episode_reward": 40.35,
+    "mean_episode_steps": 54.83,
+    "avg_inference_latency_ms": 1.069,
+    "release_ready": true
+  }
+}

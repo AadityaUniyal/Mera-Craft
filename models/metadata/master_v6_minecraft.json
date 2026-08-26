@@ -1,0 +1,28 @@
+{
+  "model_name": "MINDCRAFT Minecraft Master Brain (v6 Pro)",
+  "version": "v6.0.0-pro",
+  "framework": "PyTorch PPO Residual -> ONNX Opset 14",
+  "observation_dim": 42,
+  "action_dim": 10,
+  "actions": [
+    "Walk Forward",
+    "Sprint Forward",
+    "Backward",
+    "Turn Left",
+    "Turn Right",
+    "Jump / Parkour",
+    "Sneak (Safe Edge)",
+    "Mine / Break Block",
+    "Place / Bridge Block",
+    "Craft / Eat / Deposit"
+  ],
+  "challenges": [
+    "Parkour Chasm & 2-Block Gap Leap",
+    "Lava Lake Bridging",
+    "Night Survival & Creeper Evasion",
+    "Full Speedrun Economy Loop",
+    "Mountain Pillar Climbing"
+  ],
+  "sha256": "ec89cb656f85f7a972d772d60e4c7ae89408bc6247959a2eb4800283dd4a1cb4",
+  "created_at": "2026-08-26T23:35:00Z"
+}

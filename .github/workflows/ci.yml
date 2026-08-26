@@ -1,0 +1,58 @@
+name: MINDCRAFT CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  test-ai:
+    name: Reinforcement Learning & ONNX Verification
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install AI Dependencies
+        run: |
+          pip install torch torchvision numpy gymnasium onnx onnxruntime pytest
+
+      - name: Run Environment & Model Unit Tests
+        run: |
+          pytest training/tests/test_env_and_model.py -v
+
+      - name: Verify Model Export Parity
+        run: |
+          python training/scripts/export_onnx.py
+
+  build-web:
+    name: Web Application Build & Typecheck
+    runs-on: ubuntu-latest
+    needs: test-ai
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: "npm"
+          cache-dependency-path: apps/web/package.json
+
+      - name: Install Web Dependencies
+        working-directory: apps/web
+        run: npm ci
+
+      - name: Build Next.js Web App
+        working-directory: apps/web
+        run: npm run build

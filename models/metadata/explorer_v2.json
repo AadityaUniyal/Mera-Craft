@@ -1,0 +1,42 @@
+{
+  "model_id": "explorer-v2",
+  "name": "Mindcraft Explorer V2",
+  "version": "v2",
+  "algorithm": "PPO (Proximal Policy Optimization)",
+  "framework": "PyTorch 2.6 / ONNX Opset 17",
+  "input_tensor": {
+    "name": "observation",
+    "shape": [
+      "batch_size",
+      24
+    ],
+    "description": "8 ray obstacle dists, 8 target rays, dx, dz, dist, angle, yaw_sin, yaw_cos, inventory, steps"
+  },
+  "output_tensor": {
+    "name": "action_probabilities",
+    "shape": [
+      "batch_size",
+      7
+    ],
+    "actions": [
+      "Forward",
+      "Backward",
+      "Turn Left",
+      "Turn Right",
+      "Jump",
+      "Collect",
+      "Stop"
+    ]
+  },
+  "model_hash_sha256": "eae598813fac7dc5eff1e1dce3d2638b05eb33a05bc10d11b0d363ea54481b66",
+  "file_size_kb": 115.49,
+  "artifact_path": "/models/explorer_v2.onnx",
+  "evaluation_metrics": {
+    "success_rate": 95.0,
+    "generalization_score": 93.33,
+    "mean_reward": 40.35,
+    "inference_latency_ms": 1.069
+  },
+  "release_status": "APPROVED",
+  "release_tier": "PRODUCTION"
+}

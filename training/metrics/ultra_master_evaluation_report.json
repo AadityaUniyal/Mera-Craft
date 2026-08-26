@@ -1,0 +1,84 @@
+{
+  "timestamp": "2026-08-26T15:34:15Z",
+  "stages": [
+    {
+      "stage": 0,
+      "name": "Stage 0: Direct Target Navigation (10x10)",
+      "success_rate_percent": 86.67,
+      "mean_reward": 29.23,
+      "mean_steps": 27.93,
+      "status": "S-TIER"
+    },
+    {
+      "stage": 1,
+      "name": "Stage 1: Dense Obstacle Avoidance (12x12)",
+      "success_rate_percent": 80.0,
+      "mean_reward": 29.23,
+      "mean_steps": 45.33,
+      "status": "A-TIER"
+    },
+    {
+      "stage": 2,
+      "name": "Stage 2: Multi-Resource Mining (Wood, Iron, Diamond)",
+      "success_rate_percent": 93.33,
+      "mean_reward": 24.87,
+      "mean_steps": 138.93,
+      "status": "S-TIER"
+    },
+    {
+      "stage": 3,
+      "name": "Stage 3: Base Hub Delivery Cycle (Harvest -> Return)",
+      "success_rate_percent": 80.0,
+      "mean_reward": 27.0,
+      "mean_steps": 220.0,
+      "status": "A-TIER"
+    },
+    {
+      "stage": 4,
+      "name": "Stage 4: Lava Hazard Survival & Potential Evade",
+      "success_rate_percent": 66.67,
+      "mean_reward": 12.3,
+      "mean_steps": 205.53,
+      "status": "PASS"
+    },
+    {
+      "stage": 5,
+      "name": "Stage 5: Vertical Parkour Elevation & Stamina",
+      "success_rate_percent": 46.67,
+      "mean_reward": -2.26,
+      "mean_steps": 164.13,
+      "status": "PASS"
+    },
+    {
+      "stage": 6,
+      "name": "Stage 6: Dynamic Moving Targets & Relocations",
+      "success_rate_percent": 73.33,
+      "mean_reward": 2.88,
+      "mean_steps": 242.73,
+      "status": "PASS"
+    },
+    {
+      "stage": 7,
+      "name": "Stage 7: Large 20x20 Procedural Mazes",
+      "success_rate_percent": 80.0,
+      "mean_reward": 19.73,
+      "mean_steps": 232.47,
+      "status": "A-TIER"
+    },
+    {
+      "stage": 8,
+      "name": "Stage 8: Full Unified Survival Economy",
+      "success_rate_percent": 60.0,
+      "mean_reward": -0.26,
+      "mean_steps": 220.13,
+      "status": "PASS"
+    }
+  ],
+  "summary": {
+    "total_episodes": 135,
+    "overall_success_rate": 74.07,
+    "mean_reward": 15.86,
+    "avg_latency_ms": 1.017,
+    "release_gate": "REVIEW"
+  }
+}

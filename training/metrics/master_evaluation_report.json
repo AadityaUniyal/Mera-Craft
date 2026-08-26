@@ -1,0 +1,44 @@
+{
+  "timestamp": "2026-08-26T13:26:28Z",
+  "tasks": [
+    {
+      "task_id": 0,
+      "task_name": "Multi-Resource Mining (Wood, Iron, Diamond)",
+      "success_rate_percent": 64.0,
+      "mean_reward": 52.42,
+      "mean_steps": 201.92,
+      "status": "COMPETENT"
+    },
+    {
+      "task_id": 1,
+      "task_name": "Base Delivery Cycle (Harvest -> Return)",
+      "success_rate_percent": 72.0,
+      "mean_reward": 30.81,
+      "mean_steps": 225.2,
+      "status": "COMPETENT"
+    },
+    {
+      "task_id": 2,
+      "task_name": "Hazardous Lava Survival & Evade",
+      "success_rate_percent": 56.0,
+      "mean_reward": 56.78,
+      "mean_steps": 188.16,
+      "status": "COMPETENT"
+    },
+    {
+      "task_id": 3,
+      "task_name": "Parkour Elevation & Hill Traversal",
+      "success_rate_percent": 56.0,
+      "mean_reward": 45.98,
+      "mean_steps": 201.32,
+      "status": "COMPETENT"
+    }
+  ],
+  "summary": {
+    "total_episodes": 100,
+    "overall_success_rate": 62.0,
+    "mean_reward": 46.5,
+    "avg_latency_ms": 1.77,
+    "release_gate": "REVIEW"
+  }
+}

@@ -1,0 +1,158 @@
+// MINDCRAFT Database Schema (Neon PostgreSQL / Prisma ORM)
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  USER
+  ADMIN
+  MODERATOR
+}
+
+enum ModelStatus {
+  CANDIDATE
+  EVALUATION
+  RELEASE_CANDIDATE
+  APPROVED
+  PRODUCTION
+  ARCHIVED
+}
+
+enum EpisodeOutcome {
+  GOAL_REACHED
+  TIMEOUT
+  OBSTACLE_COLLISION
+  ABORTED
+}
+
+model User {
+  id           String        @id @default(uuid())
+  email        String        @unique
+  role         Role          @default(USER)
+  createdAt    DateTime      @default(now())
+  lastActiveAt DateTime      @updatedAt
+  profile      Profile?
+  sessions     Session[]
+  auditLogs    AuditLog[]
+
+  @@map("users")
+}
+
+model Profile {
+  id          String   @id @default(uuid())
+  userId      String   @unique
+  displayName String
+  avatarUrl   String?
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("profiles")
+}
+
+model Model {
+  id          String         @id @default(uuid())
+  name        String
+  description String
+  versions    ModelVersion[]
+  createdAt   DateTime       @default(now())
+
+  @@map("models")
+}
+
+model ModelVersion {
+  id              String         @id @default(uuid())
+  modelId         String
+  versionTag      String
+  artifactUri     String
+  modelHashSha256 String
+  status          ModelStatus    @default(CANDIDATE)
+  fileSizeKb      Float
+  publishedAt     DateTime?
+  createdAt       DateTime       @default(now())
+  model           Model          @relation(fields: [modelId], references: [id])
+  trainingRuns    TrainingRun[]
+  evaluations     Evaluation[]
+  sessions        Session[]
+
+  @@unique([modelId, versionTag])
+  @@map("model_versions")
+}
+
+model TrainingRun {
+  id                  String       @id @default(uuid())
+  modelVersionId      String
+  algorithm           String       @default("PPO")
+  environmentVersion  String       @default("v2")
+  rewardVersion       String       @default("v2")
+  hyperparametersJson Json
+  timestepsTrained    Int
+  peakReward          Float
+  startedAt           DateTime     @default(now())
+  finishedAt          DateTime?
+  modelVersion        ModelVersion @relation(fields: [modelVersionId], references: [id])
+
+  @@map("training_runs")
+}
+
+model Evaluation {
+  id                   String       @id @default(uuid())
+  modelVersionId       String
+  scenario             String
+  heldOutSeedsCount    Int
+  successRatePercent   Float
+  generalizationScore  Float
+  meanEpisodeReward    Float
+  meanEpisodeSteps     Float
+  avgInferenceLatencyMs Float
+  passedReleaseGate    Boolean
+  createdAt            DateTime     @default(now())
+  modelVersion         ModelVersion @relation(fields: [modelVersionId], references: [id])
+
+  @@map("evaluations")
+}
+
+model Session {
+  id              String           @id @default(uuid())
+  userId          String?
+  modelVersionId  String
+  worldSeed       Int
+  curriculumLevel Int
+  totalSteps      Int
+  totalReward     Float
+  outcome         EpisodeOutcome
+  startedAt       DateTime         @default(now())
+  endedAt         DateTime?
+  user            User?            @relation(fields: [userId], references: [id])
+  modelVersion    ModelVersion     @relation(fields: [modelVersionId], references: [id])
+  telemetryEvents TelemetryEvent[]
+
+  @@map("sessions")
+}
+
+model TelemetryEvent {
+  id          String   @id @default(uuid())
+  sessionId   String
+  eventType   String
+  timestamp   DateTime @default(now())
+  payloadJson Json
+  session     Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@map("telemetry_events")
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  actorId   String
+  action    String
+  target    String
+  metadata  Json
+  timestamp DateTime @default(now())
+  actor     User     @relation(fields: [actorId], references: [id])
+
+  @@map("audit_logs")
+}

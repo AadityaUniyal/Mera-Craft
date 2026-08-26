@@ -1,0 +1,25 @@
+{
+  "model_name": "MINDCRAFT Master Multi-Objective Brain",
+  "version": "v4.0.0-master",
+  "framework": "PyTorch PPO -> ONNX Opset 14",
+  "observation_dim": 32,
+  "action_dim": 8,
+  "actions": [
+    "Forward",
+    "Backward",
+    "Turn Left",
+    "Turn Right",
+    "Jump/Climb",
+    "Harvest",
+    "Deposit/Craft",
+    "Rest/Stabilize"
+  ],
+  "tasks_supported": [
+    "Multi-Resource Mining (Wood, Iron, Diamond)",
+    "Base Hub Delivery Cycles",
+    "Hazardous Lava Survival & Evade",
+    "Parkour Vertical Elevation Traversal"
+  ],
+  "sha256": "89a17e317f03eba397115be23d834cdd1fbad871dd5858b54b6c13faa92e189d",
+  "created_at": "2026-08-26T13:28:00Z"
+}
