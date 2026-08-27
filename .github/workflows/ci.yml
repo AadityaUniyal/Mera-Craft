@@ -8,7 +8,7 @@ on:
 
 jobs:
   test-ai:
-    name: Reinforcement Learning & ONNX Verification
+    name: Reinforcement Learning & Advanced AI Verification
     runs-on: ubuntu-latest
 
     steps:
@@ -20,14 +20,16 @@ jobs:
         with:
           python-version: "3.12"
           cache: "pip"
+          cache-dependency-path: requirements.txt
 
       - name: Install AI Dependencies
         run: |
-          pip install torch torchvision numpy gymnasium onnx onnxruntime pytest
+          pip install --upgrade pip
+          pip install -r requirements.txt
 
-      - name: Run Environment & Model Unit Tests
+      - name: Run Pytest Test Suite
         run: |
-          pytest training/tests/test_env_and_model.py -v
+          pytest training/tests/test_env_and_model.py ml/tests/test_advanced_ai_suite.py -v
 
       - name: Verify Model Export Parity
         run: |
@@ -46,12 +48,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: "npm"
-          cache-dependency-path: apps/web/package.json
 
       - name: Install Web Dependencies
         working-directory: apps/web
-        run: npm ci
+        run: npm install
 
       - name: Generate Prisma Client
         working-directory: apps/web
@@ -59,4 +59,9 @@ jobs:
 
       - name: Build Next.js Web App
         working-directory: apps/web
+        env:
+          DATABASE_URL: "postgresql://neondb_owner:npg_mock@ep-purple-king.neon.tech/neondb?sslmode=require"
+          DIRECT_URL: "postgresql://neondb_owner:npg_mock@ep-purple-king.neon.tech/neondb?sslmode=require"
+          JWT_SECRET: "ci_pipeline_dummy_jwt_secret_key_minimum_32_characters"
+          NODE_ENV: "production"
         run: npm run build
