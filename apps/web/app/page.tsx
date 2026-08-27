@@ -204,24 +204,30 @@ export default function LandingPage() {
             MIND<span className="text-emerald-400">CRAFT</span>
           </h1>
           <h2 className="text-lg sm:text-2xl text-slate-300 font-medium max-w-2xl mb-4 leading-relaxed">
-            4 Specialized AI Characters with Distinct DNA, Trained via Curriculum PPO, Behavioral Cloning & Threat Interception
+            Enter a vibrant fullscreen 3D Minecraft world where autonomous AI characters roam, respond to your voice, mine, build, and fight alongside you!
           </h2>
           <div className="flex flex-wrap items-center justify-center gap-4 mt-8">
             <Link
-              href="/demo"
+              href="/game"
               onClick={() => soundSynth.playDiamondChime?.()}
-              className="px-6 py-3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-semibold rounded-2xl flex items-center gap-2 transition-colors"
+              className="px-8 py-4 bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-base font-bold rounded-2xl flex items-center gap-3 shadow-[0_0_30px_rgba(16,185,129,0.5)] hover:scale-105 transition-all"
             >
-              <Play className="w-5 h-5 fill-current" />
-              <span>Launch 3D Voxel AI Lab</span>
+              <Play className="w-6 h-6 fill-current" />
+              <span>🎮 Play Fullscreen Minecraft World</span>
             </Link>
             <Link
-              href="/characters"
-              onClick={() => soundSynth.playBlockPlace?.()}
-              className="px-6 py-3 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-white font-semibold rounded-2xl flex items-center gap-2 transition-colors"
+              href="/ai-studio"
+              className="px-6 py-3.5 bg-cyan-600/20 hover:bg-cyan-600/30 border border-cyan-500/40 text-cyan-300 font-semibold rounded-2xl flex items-center gap-2 transition-all shadow-[0_0_15px_rgba(6,182,212,0.2)]"
+            >
+              <Sparkles className="w-5 h-5 text-cyan-400" />
+              <span>AI Training Studio</span>
+            </Link>
+            <Link
+              href="/sandbox"
+              className="px-6 py-3.5 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-white font-semibold rounded-2xl flex items-center gap-2 transition-colors"
             >
               <Bot className="w-5 h-5 text-emerald-400" />
-              <span>Bot Roster</span>
+              <span>3D Sandbox Editor</span>
             </Link>
           </div>
         </section>
