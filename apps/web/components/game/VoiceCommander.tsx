@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { Mic, MicOff, Volume2, Sparkles, Terminal, Loader2, Radio } from "lucide-react";
+import { Mic, MicOff, Volume2, Sparkles, Terminal, Loader2, Radio, Send } from "lucide-react";
 import { soundFx } from "@/lib/audio-synthesizer";
 
 interface VoiceCommanderProps {
@@ -17,6 +17,7 @@ export function VoiceCommander({
 }: VoiceCommanderProps) {
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState("");
+  const [textInput, setTextInput] = useState("");
   const [aiResponse, setAiResponse] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const recognitionRef = useRef<any>(null);
@@ -42,7 +43,7 @@ export function VoiceCommander({
         };
 
         recognition.onerror = (event: any) => {
-          console.warn("Speech recognition notice:", event.error);
+          console.warn("Speech recognition event:", event.error);
           setIsListening(false);
         };
 
@@ -81,11 +82,11 @@ export function VoiceCommander({
       }
     }
 
-    // 2. MediaRecorder stream fallback to Deepgram / Groq Whisper API
+    // 2. MediaRecorder fallback
     try {
       if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        const mediaRecorder = new MediaRecorder(stream, { mimeType: "audio/webm" });
+        const mediaRecorder = new MediaRecorder(stream);
         audioChunksRef.current = [];
 
         mediaRecorder.ondataavailable = (e) => {
@@ -127,7 +128,6 @@ export function VoiceCommander({
         mediaRecorder.start();
         setIsListening(true);
 
-        // Auto stop after 4 seconds
         setTimeout(() => {
           if (mediaRecorder.state === "recording") {
             mediaRecorder.stop();
@@ -210,18 +210,26 @@ export function VoiceCommander({
     }
   };
 
+  const handleTextSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!textInput.trim()) return;
+    setTranscript(textInput);
+    processCommand(textInput);
+    setTextInput("");
+  };
+
   return (
     <div
-      className={`flex flex-col gap-2 rounded-2xl border border-emerald-500/40 bg-slate-950/90 p-4 shadow-2xl backdrop-blur-md ${className}`}
+      className={`flex flex-col gap-2.5 rounded-2xl border border-emerald-500/40 bg-slate-950/95 p-4 shadow-2xl backdrop-blur-md ${className}`}
     >
       {/* Header */}
       <div className="flex items-center justify-between border-b border-white/10 pb-2 text-xs">
         <div className="flex items-center gap-2 font-mono font-bold uppercase tracking-wider text-emerald-400">
           <Radio className="h-4 w-4 animate-pulse text-emerald-400" />
-          <span>AI Radio Comms (Press V or Mic)</span>
+          <span>AI Radio & Comms</span>
         </div>
         <span className="rounded bg-emerald-950/80 px-2 py-0.5 text-[10px] font-mono text-emerald-300 border border-emerald-500/30">
-          VOICE LIVE
+          VOICE & TEXT LIVE
         </span>
       </div>
 
@@ -230,7 +238,7 @@ export function VoiceCommander({
         <button
           onClick={handleToggleListen}
           disabled={isProcessing}
-          className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl transition-all duration-300 ${
+          className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl transition-all duration-300 ${
             isListening
               ? "bg-red-500 shadow-[0_0_25px_#ef4444] text-white animate-pulse"
               : "bg-emerald-500 hover:bg-emerald-400 text-black shadow-[0_0_20px_rgba(16,185,129,0.4)]"
@@ -238,36 +246,57 @@ export function VoiceCommander({
           title={isListening ? "Click to stop recording" : "Click to speak voice command"}
         >
           {isProcessing ? (
-            <Loader2 className="h-6 w-6 animate-spin text-black" />
+            <Loader2 className="h-5 w-5 animate-spin text-black" />
           ) : isListening ? (
-            <Mic className="h-6 w-6 animate-bounce text-white" />
+            <Mic className="h-5 w-5 animate-bounce text-white" />
           ) : (
-            <Mic className="h-6 w-6 text-black" />
+            <Mic className="h-5 w-5 text-black" />
           )}
         </button>
 
-        <div className="flex flex-1 flex-col">
-          <span className="text-xs font-semibold text-white">
-            {isListening ? (
-              <span className="text-red-400 font-mono animate-pulse flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-full bg-red-400 animate-ping" />
-                Listening to microphone... Speak now!
-              </span>
-            ) : transcript ? (
-              <span className="text-emerald-300 font-mono text-xs">"{transcript}"</span>
-            ) : (
-              <span className="text-slate-300">Click mic or hold [V] to command AI characters</span>
-            )}
-          </span>
-          <span className="text-[10px] text-slate-400 mt-0.5">
-            Commands: <em>"Alex follow me"</em> · <em>"Attack creeper"</em> · <em>"Build bridge"</em>
-          </span>
-        </div>
+        <form onSubmit={handleTextSubmit} className="flex flex-1 items-center gap-1.5">
+          <input
+            type="text"
+            value={textInput}
+            onChange={(e) => setTextInput(e.target.value)}
+            placeholder="Speak into mic or type command (e.g. 'follow me', 'attack creeper')..."
+            className="w-full bg-slate-900 border border-emerald-500/40 rounded-xl px-3 py-2 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-emerald-400 font-mono"
+          />
+          <button
+            type="submit"
+            className="h-8 px-3 bg-emerald-500 hover:bg-emerald-400 text-black rounded-lg font-mono text-xs font-bold shrink-0 flex items-center gap-1"
+          >
+            <Send className="w-3 h-3" />
+            <span>Send</span>
+          </button>
+        </form>
+      </div>
+
+      {/* Quick Action Chips */}
+      <div className="flex flex-wrap items-center gap-1.5">
+        {[
+          { label: "🏃 Follow Me", cmd: "Alex follow me" },
+          { label: "⚔️ Attack Creeper", cmd: "Guardian attack creeper" },
+          { label: "🏗️ Build Bridge", cmd: "Builder build a bridge" },
+          { label: "⛏️ Mine Diamonds", cmd: "Mine diamonds" },
+          { label: "🛑 Hold Position", cmd: "Hold position" },
+        ].map((chip) => (
+          <button
+            key={chip.label}
+            onClick={() => {
+              setTranscript(chip.cmd);
+              processCommand(chip.cmd);
+            }}
+            className="px-2.5 py-1 bg-slate-900/80 hover:bg-emerald-950/80 border border-white/10 hover:border-emerald-500/40 rounded-lg text-[10px] font-mono text-slate-300 hover:text-emerald-300 transition-colors"
+          >
+            {chip.label}
+          </button>
+        ))}
       </div>
 
       {/* AI Audible Response Box */}
       {aiResponse && (
-        <div className="mt-1 flex items-start gap-2 rounded-xl border border-emerald-500/30 bg-emerald-950/40 p-2.5 text-xs text-emerald-200">
+        <div className="mt-1 flex items-start gap-2 rounded-xl border border-emerald-500/30 bg-emerald-950/50 p-2.5 text-xs text-emerald-200 animate-fade-in">
           <Volume2 className="h-4 w-4 shrink-0 text-emerald-400 mt-0.5" />
           <span className="font-mono text-xs leading-relaxed">{aiResponse}</span>
         </div>

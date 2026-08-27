@@ -5,6 +5,7 @@ import * as THREE from "three";
 import { generateWorld, WorldGenResult } from "@/lib/game/world-generator";
 import { PlayerController, PlayerState, createDefaultPlayer } from "@/lib/game/player-controller";
 import { AIEntityManager, AIEntityState, createAIEntity } from "@/lib/game/ai-entity";
+import { soundFx } from "@/lib/audio-synthesizer";
 
 interface GameCanvasProps {
   worldSeed: number;
@@ -64,6 +65,10 @@ export default function GameCanvas({
   const cleanupRef = useRef<(() => void) | null>(null);
   const animFrameRef = useRef<number>(0);
   const tickIntervalRef = useRef<number>(0);
+  const armMeshRef = useRef<THREE.Group | null>(null);
+  const isSwingingRef = useRef<boolean>(false);
+  const swingProgressRef = useRef<number>(0);
+  const placedBlocksGroupRef = useRef<THREE.Group | null>(null);
 
   // Handle live incoming voice command to AI NPCs
   useEffect(() => {
@@ -113,16 +118,21 @@ export default function GameCanvas({
       instancedMesh.instanceMatrix.needsUpdate = true;
       scene.add(instancedMesh);
     }
+
+    const placedGroup = new THREE.Group();
+    placedGroup.name = "placed_blocks";
+    scene.add(placedGroup);
+    placedBlocksGroupRef.current = placedGroup;
   }, []);
 
   const createNPCMesh = useCallback((entity: AIEntityState) => {
     const group = new THREE.Group();
     group.name = `npc_${entity.id}`;
 
-    let bodyColor = 0x2563eb; // Explorer blue
-    if (entity.role === "guardian") bodyColor = 0xd97706; // Alex amber
-    else if (entity.role === "builder") bodyColor = 0x059669; // Builder emerald
-    else if (entity.role === "creeper") bodyColor = 0x16a34a; // Creeper green
+    let bodyColor = 0x2563eb;
+    if (entity.role === "guardian") bodyColor = 0xd97706;
+    else if (entity.role === "builder") bodyColor = 0x059669;
+    else if (entity.role === "creeper") bodyColor = 0x16a34a;
 
     // Head
     const headGeo = new THREE.BoxGeometry(0.5, 0.5, 0.5);
@@ -140,7 +150,28 @@ export default function GameCanvas({
     body.castShadow = true;
     group.add(body);
 
-    // Floating Nameplate Canvas
+    // Arms & Tool
+    if (entity.role !== "creeper") {
+      const armGeo = new THREE.BoxGeometry(0.2, 0.7, 0.2);
+      const armMat = new THREE.MeshStandardMaterial({ color: bodyColor });
+      const rightArm = new THREE.Mesh(armGeo, armMat);
+      rightArm.position.set(0.42, 0.5, 0);
+      group.add(rightArm);
+
+      const leftArm = new THREE.Mesh(armGeo, armMat);
+      leftArm.position.set(-0.42, 0.5, 0);
+      group.add(leftArm);
+
+      // Tool in hand
+      const toolGeo = new THREE.BoxGeometry(0.08, 0.6, 0.08);
+      const toolMat = new THREE.MeshStandardMaterial({ color: entity.role === "guardian" ? 0x00e5ff : 0xd97706 });
+      const tool = new THREE.Mesh(toolGeo, toolMat);
+      tool.position.set(0.42, 0.2, 0.2);
+      tool.rotation.x = Math.PI / 3;
+      group.add(tool);
+    }
+
+    // Nameplate Canvas
     const canvas = document.createElement("canvas");
     canvas.width = 256;
     canvas.height = 64;
@@ -181,6 +212,26 @@ export default function GameCanvas({
     const camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 500);
     cameraRef.current = camera;
 
+    // 1st Person Arm / Tool
+    const armGroup = new THREE.Group();
+    const armGeo = new THREE.BoxGeometry(0.2, 0.6, 0.2);
+    const armMat = new THREE.MeshStandardMaterial({ color: 0x0284c7 });
+    const arm = new THREE.Mesh(armGeo, armMat);
+    arm.position.set(0.35, -0.3, -0.6);
+    arm.rotation.set(-0.3, -0.2, 0.1);
+    armGroup.add(arm);
+
+    const swordGeo = new THREE.BoxGeometry(0.06, 0.8, 0.12);
+    const swordMat = new THREE.MeshStandardMaterial({ color: 0x00e5ff, metalness: 0.8, roughness: 0.2 });
+    const sword = new THREE.Mesh(swordGeo, swordMat);
+    sword.position.set(0.35, 0.1, -0.8);
+    sword.rotation.set(Math.PI / 4, 0, 0);
+    armGroup.add(sword);
+
+    camera.add(armGroup);
+    scene.add(camera);
+    armMeshRef.current = armGroup;
+
     const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
     renderer.setSize(width, height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -211,11 +262,46 @@ export default function GameCanvas({
     const cleanupControls = controller.bindEvents(container);
     cleanupRef.current = cleanupControls;
 
+    // Block Interaction (Left-click Mine, Right-click Place)
+    const handleMouseDown = (e: MouseEvent) => {
+      if (document.pointerLockElement !== container) return;
+
+      isSwingingRef.current = true;
+      swingProgressRef.current = 0;
+
+      if (e.button === 0) {
+        // Left Click: Mine block
+        soundFx.playMineBlock(0);
+        if (playerRef.current) {
+          playerRef.current.inventory[0].count = (playerRef.current.inventory[0].count || 0) + 1;
+        }
+      } else if (e.button === 2) {
+        // Right Click: Place block
+        e.preventDefault();
+        soundFx.playPlaceBlock(0.1);
+        if (placedBlocksGroupRef.current && playerRef.current && cameraRef.current) {
+          const placeX = Math.floor(playerRef.current.position[0] + Math.sin(playerRef.current.yaw) * 2.5) + 0.5;
+          const placeZ = Math.floor(playerRef.current.position[2] + Math.cos(playerRef.current.yaw) * 2.5) + 0.5;
+          const placeY = Math.max(0, Math.floor(playerRef.current.position[1] - 0.5));
+
+          const blockGeo = new THREE.BoxGeometry(1, 1, 1);
+          const blockMat = new THREE.MeshStandardMaterial({ color: 0x757575, roughness: 0.8 });
+          const newBlock = new THREE.Mesh(blockGeo, blockMat);
+          newBlock.position.set(placeX, placeY, placeZ);
+          placedBlocksGroupRef.current.add(newBlock);
+        }
+      }
+    };
+
+    const handleContextMenu = (e: MouseEvent) => e.preventDefault();
+    window.addEventListener("mousedown", handleMouseDown);
+    window.addEventListener("contextmenu", handleContextMenu);
+
     // AI Manager
     const aiManager = new AIEntityManager(world.size, world.heightMap);
     aiManagerRef.current = aiManager;
 
-    // Spawn 4 Living Entities
+    // Spawn Living Entities
     const livingEntities = [
       createAIEntity("Steve (Scout)", "explorer", world.playerSpawn.x + 3, world.playerSpawn.z + 2),
       createAIEntity("Alex (Guardian)", "guardian", world.playerSpawn.x - 3, world.playerSpawn.z - 2),
@@ -245,6 +331,16 @@ export default function GameCanvas({
         cameraRef.current.rotation.order = "YXZ";
         cameraRef.current.rotation.y = updated.yaw;
         cameraRef.current.rotation.x = updated.pitch;
+
+        // Tool swing animation
+        if (armMeshRef.current && isSwingingRef.current) {
+          swingProgressRef.current += 0.15;
+          armMeshRef.current.rotation.x = Math.sin(swingProgressRef.current * Math.PI) * 0.6;
+          if (swingProgressRef.current >= 1.0) {
+            isSwingingRef.current = false;
+            armMeshRef.current.rotation.x = 0;
+          }
+        }
 
         onPlayerUpdate(updated);
       }
@@ -293,6 +389,8 @@ export default function GameCanvas({
       cancelAnimationFrame(animFrameRef.current);
       clearInterval(tickIntervalRef.current);
       window.removeEventListener("resize", handleResize);
+      window.removeEventListener("mousedown", handleMouseDown);
+      window.removeEventListener("contextmenu", handleContextMenu);
       if (cleanupRef.current) cleanupRef.current();
       if (renderer.domElement && container.contains(renderer.domElement)) {
         container.removeChild(renderer.domElement);

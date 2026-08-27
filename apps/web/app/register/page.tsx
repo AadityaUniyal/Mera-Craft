@@ -13,8 +13,10 @@ import {
   Bot, 
   Volume2, 
   VolumeX, 
-  Sparkles, 
-  ShieldCheck 
+  Mail, 
+  KeyRound, 
+  CheckCircle2, 
+  ExternalLink 
 } from "lucide-react";
 import { soundSynth } from "@/lib/audio/sound-synth";
 
@@ -28,6 +30,11 @@ export default function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [soundEnabled, setSoundEnabled] = useState(true);
+
+  // Step 1: Registration Form, Step 2: Email OTP Verification
+  const [step, setStep] = useState<"form" | "verify">("form");
+  const [otpCode, setOtpCode] = useState("");
+  const [emailPreviewUrl, setEmailPreviewUrl] = useState<string | null>(null);
 
   // 3D Three.js Scene Setup
   useEffect(() => {
@@ -49,7 +56,6 @@ export default function RegisterPage() {
     renderer.setSize(width, height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     container.appendChild(renderer.domElement);
 
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
@@ -142,7 +148,7 @@ export default function RegisterPage() {
     if (next) soundSynth.playDiamondChime();
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleRegisterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setIsLoading(true);
@@ -163,13 +169,45 @@ export default function RegisterPage() {
 
       if (res.ok && data.success) {
         if (soundEnabled) soundSynth.playLevelUp();
-        router.push("/demo");
+        if (data.previewUrl) setEmailPreviewUrl(data.previewUrl);
+        setStep("verify");
       } else {
         setError(data.error || "Registration failed");
         if (soundEnabled) soundSynth.playHurtGrunt();
       }
     } catch {
       setError("Network error. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleVerifySubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setIsLoading(true);
+
+    try {
+      const res = await fetch("/api/auth/verify-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: email.trim(),
+          code: otpCode.trim(),
+        }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        if (soundEnabled) soundSynth.playLevelUp();
+        router.push("/game");
+      } else {
+        setError(data.error || "Invalid verification code");
+        if (soundEnabled) soundSynth.playHurtGrunt();
+      }
+    } catch {
+      setError("Verification failed. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -203,20 +241,22 @@ export default function RegisterPage() {
                 MIND<span className="text-[#34d399]">CRAFT</span>
               </span>
               <span className="font-pixel text-[9px] text-[#38bdf8] tracking-wider">
-                CREATE PLAYER IDENTITY
+                PLAYER IDENTITY & EMAIL VERIFICATION
               </span>
             </div>
           </Link>
         </div>
 
-        {/* Register GUI Box */}
+        {/* GUI Panel */}
         <div className="mc-panel-stone p-6 sm:p-8 space-y-5 shadow-2xl">
           <div className="text-center border-b-2 border-[#141720] pb-3">
             <h1 className="font-pixel text-sm sm:text-base font-bold text-white tracking-wider">
-              NEW PLAYER REGISTRATION
+              {step === "form" ? "NEW PLAYER REGISTRATION" : "VERIFY EMAIL CODE"}
             </h1>
             <p className="font-mono text-[11px] text-[#94a3b8] mt-1">
-              Initialize player profile and connect to Neon database
+              {step === "form"
+                ? "Enter player credentials to receive 6-digit OTP verification code"
+                : `Enter the 6-digit code sent to ${email}`}
             </p>
           </div>
 
@@ -227,72 +267,119 @@ export default function RegisterPage() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-1">
-              <label className="font-pixel text-[9px] text-[#94a3b8] uppercase tracking-wider block">
-                PLAYER NAME / CALLSIGN
-              </label>
-              <input
-                type="text"
-                value={displayName}
-                onChange={(e) => setDisplayName(e.target.value)}
-                placeholder="Steve_Voxel"
-                className="w-full bg-[#12151e] border-2 border-t-[#0b0d13] border-l-[#0b0d13] border-r-[#32394a] border-b-[#32394a] px-3 py-2 text-white font-mono text-xs focus:border-[#10b981] outline-none"
-                autoFocus
-              />
-            </div>
-
-            <div className="space-y-1">
-              <label className="font-pixel text-[9px] text-[#94a3b8] uppercase tracking-wider block">
-                EMAIL ADDRESS
-              </label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="steve@mindcraft.ai"
-                className="w-full bg-[#12151e] border-2 border-t-[#0b0d13] border-l-[#0b0d13] border-r-[#32394a] border-b-[#32394a] px-3 py-2 text-white font-mono text-xs focus:border-[#10b981] outline-none"
-                required
-              />
-            </div>
-
-            <div className="space-y-1">
-              <label className="font-pixel text-[9px] text-[#94a3b8] uppercase tracking-wider block">
-                PASSWORD CIPHER
-              </label>
-              <div className="relative">
+          {step === "form" ? (
+            <form onSubmit={handleRegisterSubmit} className="space-y-4">
+              <div className="space-y-1">
+                <label className="font-pixel text-[9px] text-[#94a3b8] uppercase tracking-wider block">
+                  PLAYER NAME / CALLSIGN
+                </label>
                 <input
-                  type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Min. 6 characters"
-                  className="w-full bg-[#12151e] border-2 border-t-[#0b0d13] border-l-[#0b0d13] border-r-[#32394a] border-b-[#32394a] px-3 py-2 pr-10 text-white font-mono text-xs focus:border-[#10b981] outline-none"
-                  required
-                  minLength={6}
+                  type="text"
+                  value={displayName}
+                  onChange={(e) => setDisplayName(e.target.value)}
+                  placeholder="Steve_Voxel"
+                  className="w-full bg-[#12151e] border-2 border-t-[#0b0d13] border-l-[#0b0d13] border-r-[#32394a] border-b-[#32394a] px-3 py-2 text-white font-mono text-xs focus:border-[#10b981] outline-none"
+                  autoFocus
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#94a3b8] hover:text-white"
-                >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
               </div>
-            </div>
 
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="mc-btn mc-btn-primary w-full text-xs py-3 font-pixel tracking-wider shadow-lg"
-            >
-              {isLoading ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <UserPlus className="w-4 h-4" />
+              <div className="space-y-1">
+                <label className="font-pixel text-[9px] text-[#94a3b8] uppercase tracking-wider block">
+                  EMAIL ADDRESS
+                </label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="steve@mindcraft.ai"
+                  className="w-full bg-[#12151e] border-2 border-t-[#0b0d13] border-l-[#0b0d13] border-r-[#32394a] border-b-[#32394a] px-3 py-2 text-white font-mono text-xs focus:border-[#10b981] outline-none"
+                  required
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="font-pixel text-[9px] text-[#94a3b8] uppercase tracking-wider block">
+                  PASSWORD CIPHER
+                </label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Min. 6 characters"
+                    className="w-full bg-[#12151e] border-2 border-t-[#0b0d13] border-l-[#0b0d13] border-r-[#32394a] border-b-[#32394a] px-3 py-2 pr-10 text-white font-mono text-xs focus:border-[#10b981] outline-none"
+                    required
+                    minLength={6}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#94a3b8] hover:text-white"
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="mc-btn mc-btn-primary w-full text-xs py-3 font-pixel tracking-wider shadow-lg"
+              >
+                {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />}
+                <span>{isLoading ? "SENDING OTP..." : "SEND VERIFICATION EMAIL"}</span>
+              </button>
+            </form>
+          ) : (
+            <form onSubmit={handleVerifySubmit} className="space-y-4">
+              <div className="space-y-1 text-center">
+                <label className="font-pixel text-[9px] text-emerald-400 uppercase tracking-wider block">
+                  6-DIGIT OTP CODE
+                </label>
+                <input
+                  type="text"
+                  maxLength={6}
+                  value={otpCode}
+                  onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ""))}
+                  placeholder="123456"
+                  className="w-full text-center tracking-[12px] text-2xl font-mono font-bold bg-[#12151e] border-2 border-emerald-500/50 py-3 text-emerald-300 outline-none"
+                  autoFocus
+                  required
+                />
+              </div>
+
+              {emailPreviewUrl && (
+                <div className="p-2.5 bg-cyan-950/40 border border-cyan-500/30 rounded text-center">
+                  <a
+                    href={emailPreviewUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1.5 font-mono text-[11px] text-cyan-300 hover:text-cyan-200 underline"
+                  >
+                    <ExternalLink className="w-3 h-3" />
+                    <span>View Sent Email Preview in Browser</span>
+                  </a>
+                </div>
               )}
-              <span>{isLoading ? "INITIALIZING ID..." : "CREATE VOXEL IDENTITY"}</span>
-            </button>
-          </form>
+
+              <button
+                type="submit"
+                disabled={isLoading || otpCode.length < 6}
+                className="mc-btn mc-btn-primary w-full text-xs py-3 font-pixel tracking-wider shadow-lg"
+              >
+                {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+                <span>{isLoading ? "VERIFYING..." : "VERIFY & ENTER MINECRAFT"}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setStep("form")}
+                className="w-full text-center font-mono text-[11px] text-slate-400 hover:text-white"
+              >
+                ← Back to Edit Email
+              </button>
+            </form>
+          )}
 
           <div className="pt-3 border-t-2 border-[#141720] text-center">
             <Link
