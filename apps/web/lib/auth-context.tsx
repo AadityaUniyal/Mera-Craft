@@ -2,11 +2,12 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 
-interface User {
+export interface User {
   id: string;
   email: string;
   role: "USER" | "ADMIN" | "MODERATOR" | "ML_OPERATOR";
   displayName: string;
+  gameId?: string;
 }
 
 interface AuthContextType {
@@ -45,7 +46,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             id: data.user.id,
             email: data.user.email,
             role: data.user.role,
-            displayName: data.user.displayName || data.user.email.split("@")[0],
+            displayName: data.user.profile?.displayName || data.user.email.split("@")[0],
+            gameId: data.user.gameProfiles?.[0]?.gameId || "GAME-7842-MC",
           });
         } else {
           setUser(null);
@@ -73,17 +75,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
       const data = await res.json();
       if (res.ok && data.success) {
-        setUser({
-          id: data.user.id,
-          email: data.user.email,
-          role: data.user.role,
-          displayName: data.user.displayName || email.split("@")[0],
-        });
+        await refreshAuth();
         return { success: true };
       }
       return { success: false, error: data.error || "Login failed" };
     } catch (err: any) {
-      return { success: false, error: "Network error" };
+      return { success: false, error: err.message || "Network error" };
     }
   };
 
@@ -96,24 +93,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
       const data = await res.json();
       if (res.ok && data.success) {
-        setUser({
-          id: data.user.id,
-          email: data.user.email,
-          role: data.user.role,
-          displayName: data.user.displayName || displayName,
-        });
+        await refreshAuth();
         return { success: true };
       }
       return { success: false, error: data.error || "Registration failed" };
     } catch (err: any) {
-      return { success: false, error: "Network error" };
+      return { success: false, error: err.message || "Network error" };
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } catch {}
     setUser(null);
-    // Clear the auth cookie by hitting logout (or just clearing state)
-    fetch("/api/auth/logout", { method: "POST" }).catch(() => {});
   };
 
   return (
@@ -121,7 +114,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       value={{
         user,
         isAuthenticated: !!user,
-        isAdmin: user?.role === "ADMIN" || user?.role === "ML_OPERATOR",
+        isAdmin: user?.role === "ADMIN",
         loading,
         login,
         register,

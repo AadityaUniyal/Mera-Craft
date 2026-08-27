@@ -14,7 +14,12 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { modelVersionId, versionTag, bypassReleaseGate } = await req.json();
+    const body = await req.json().catch(() => null);
+    if (!body) {
+      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    }
+
+    const { modelVersionId, versionTag, bypassReleaseGate } = body;
 
     if (!modelVersionId && !versionTag) {
       return NextResponse.json(
@@ -23,10 +28,16 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Find candidate model
+    // Find candidate model with deterministically ordered evaluations
     const candidate = await prisma.modelVersion.findFirst({
       where: modelVersionId ? { id: modelVersionId } : { versionTag },
-      include: { evaluations: true, model: true },
+      include: {
+        evaluations: {
+          orderBy: { createdAt: "desc" },
+          take: 1,
+        },
+        character: true,
+      },
     });
 
     if (!candidate) {
@@ -38,7 +49,9 @@ export async function POST(req: NextRequest) {
 
     // Automated Release Gate Validation
     const latestEval = candidate.evaluations[0];
-    const meetsGate = latestEval ? latestEval.successRatePercent >= 75.0 && latestEval.avgInferenceLatencyMs <= 10.0 : false;
+    const meetsGate = latestEval
+      ? latestEval.successRatePercent >= 75.0 && latestEval.avgInferenceLatencyMs <= 10.0
+      : false;
 
     if (!meetsGate && !bypassReleaseGate) {
       return NextResponse.json(
@@ -50,47 +63,52 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Demote current production model
-    await prisma.modelVersion.updateMany({
-      where: { status: "PRODUCTION" },
-      data: { status: "APPROVED" },
-    });
+    // Atomic promotion using interactive transaction
+    const published = await prisma.$transaction(async (tx) => {
+      // 1. Demote current active model for this character
+      await tx.modelVersion.updateMany({
+        where: { characterId: candidate.characterId, status: "ACTIVE" },
+        data: { status: "RETIRED", retiredAt: new Date() },
+      });
 
-    // Promote new model to PRODUCTION
-    const published = await prisma.modelVersion.update({
-      where: { id: candidate.id },
-      data: {
-        status: "PRODUCTION",
-        publishedAt: new Date(),
-      },
-    });
-
-    // Write Audit Log
-    await prisma.auditLog.create({
-      data: {
-        actorId: auth.user.id,
-        action: "MODEL_PUBLISHED",
-        targetType: "ModelVersion",
-        targetId: candidate.id,
-        details: {
-          versionTag: candidate.versionTag,
-          modelName: candidate.model.name,
-          successRate: latestEval?.successRatePercent,
-          latencyMs: latestEval?.avgInferenceLatencyMs,
-          publishedBy: auth.user.email,
+      // 2. Promote new model to ACTIVE
+      const updated = await tx.modelVersion.update({
+        where: { id: candidate.id },
+        data: {
+          status: "ACTIVE",
+          publishedAt: new Date(),
+          canaryPercent: 100,
         },
-      },
+      });
+
+      // 3. Audit Logging
+      await tx.auditLog.create({
+        data: {
+          actorId: auth.user.id,
+          action: "MODEL_PROMOTED",
+          targetType: "ModelVersion",
+          targetId: candidate.id,
+          details: {
+            character: candidate.character.name,
+            versionTag: candidate.versionTag,
+            successRatePercent: latestEval?.successRatePercent,
+            bypassedGate: !!bypassReleaseGate,
+          },
+        },
+      });
+
+      return updated;
     });
 
     return NextResponse.json({
       success: true,
-      message: `Model ${candidate.versionTag} has been promoted to PRODUCTION.`,
-      model: published,
+      message: `Model ${candidate.versionTag} successfully promoted to ACTIVE for ${candidate.character.name}.`,
+      publishedModel: published,
     });
-  } catch (error: any) {
-    console.error("Publish error:", error);
+  } catch (err: any) {
+    console.error("[-] Error publishing model:", err);
     return NextResponse.json(
-      { error: "Internal server error promoting model to production" },
+      { error: "Internal Server Error during model promotion" },
       { status: 500 }
     );
   }

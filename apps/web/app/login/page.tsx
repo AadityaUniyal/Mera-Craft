@@ -15,8 +15,7 @@ import {
   VolumeX, 
   Sparkles, 
   Compass, 
-  Play, 
-  KeyRound
+  Play
 } from "lucide-react";
 import { soundSynth } from "@/lib/audio/sound-synth";
 
@@ -231,12 +230,6 @@ export default function LoginPage() {
     if (next) soundSynth.playDiamondChime();
   };
 
-  const handleDemoFill = () => {
-    setEmail("admin@mindcraft.ai");
-    setPassword("mindcraft2026");
-    if (soundEnabled) soundSynth.playBlockPlace();
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -256,11 +249,11 @@ export default function LoginPage() {
         if (soundEnabled) soundSynth.playLevelUp();
         router.push("/demo");
       } else {
-        setError(data.error || "Invalid credentials. Try Auto-fill Demo Account!");
+        setError(data.error || "Invalid credentials.");
         if (soundEnabled) soundSynth.playHurtGrunt();
       }
     } catch {
-      setError("Network error. Launching guest AI lab mode.");
+      setError("Network connection error.");
     } finally {
       setIsLoading(false);
     }
@@ -357,18 +350,6 @@ export default function LoginPage() {
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
-            </div>
-
-            {/* Quick Demo Autofill Button */}
-            <div className="flex justify-end">
-              <button
-                type="button"
-                onClick={handleDemoFill}
-                className="font-pixel text-[8px] text-[#38bdf8] hover:text-[#7dd3fc] flex items-center gap-1 transition"
-              >
-                <KeyRound className="w-3 h-3" />
-                <span>AUTO-FILL DEMO ACCOUNT</span>
-              </button>
             </div>
 
             {/* Enter World Button */}

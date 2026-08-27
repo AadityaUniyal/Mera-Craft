@@ -6,14 +6,28 @@ import {
   Trophy, 
   Swords, 
   Flame, 
-  Moon, 
+  Droplets, 
   Zap, 
   Mountain, 
   Play, 
   Sparkles, 
-  RefreshCw 
+  RefreshCw,
+  Shield,
+  Star,
+  Clock,
+  Target,
+  Bot
 } from "lucide-react";
-import { soundSynth } from "@/lib/audio/sound-synth";
+
+interface ChallengeScore {
+  id: string;
+  agentName: string;
+  score: number;
+  timeElapsedSec: number;
+  heartsLeft: number;
+  blocksPlaced: number;
+  passed: boolean;
+}
 
 interface ChallengeData {
   id: string;
@@ -24,159 +38,164 @@ interface ChallengeData {
   difficulty: string;
   parTimeSeconds: number;
   targetScore: number;
-  arenaLevel: number;
+  character: string;
+  scores: ChallengeScore[];
 }
 
-const STATIC_CHALLENGES: ChallengeData[] = [
-  {
-    id: "ch_parkour",
-    slug: "parkour-chasm",
-    title: "1. Precision Parkour Gap",
-    description: "Navigate 2-block gap leaps over void chasms. Requires sprint acceleration and timing jump momentum.",
-    challengeType: "PARKOUR_CHASM",
-    difficulty: "Medium",
-    parTimeSeconds: 15,
-    targetScore: 45,
-    arenaLevel: 0,
-  },
-  {
-    id: "ch_bridging",
-    slug: "lava-bridging",
-    title: "2. Lava Lake Bridging",
-    description: "Safely cross a boiling lava lake using crouch edge protection and placing cobblestone bridge blocks.",
-    challengeType: "LAVA_BRIDGING",
-    difficulty: "Hard",
-    parTimeSeconds: 25,
-    targetScore: 60,
-    arenaLevel: 1,
-  },
-  {
-    id: "ch_water",
-    slug: "water-island",
-    title: "3. Water River Diamond Island",
-    description: "Cross rapid water rivers without drowning to extract isolated diamond ore veins.",
-    challengeType: "WATER_RIVER",
-    difficulty: "Medium",
-    parTimeSeconds: 20,
-    targetScore: 50,
-    arenaLevel: 2,
-  },
-  {
-    id: "ch_night",
-    slug: "night-creeper",
-    title: "4. Night Creeper Survival",
-    description: "Survive the pitch black night while an aggressive Creeper tracks your position in real-time.",
-    challengeType: "NIGHT_SURVIVAL",
-    difficulty: "Extreme",
-    parTimeSeconds: 30,
-    targetScore: 80,
-    arenaLevel: 3,
-  },
-  {
-    id: "ch_economy",
-    slug: "speedrun-economy",
-    title: "5. Diamond Speedrun Economy",
-    description: "Complete full Minecraft progression: harvest oak wood, craft tools, mine iron, extract diamond, and deliver to depot.",
-    challengeType: "SPEEDRUN_ECONOMY",
-    difficulty: "Master",
-    parTimeSeconds: 40,
-    targetScore: 100,
-    arenaLevel: 4,
-  },
-];
+const DIFFICULTY_STYLES: Record<string, string> = {
+  Medium: "bg-cyan-500/20 text-cyan-300 border border-cyan-500/40",
+  Hard: "bg-amber-500/20 text-amber-300 border border-amber-500/40",
+  Expert: "bg-rose-500/20 text-rose-300 border border-rose-500/40",
+};
+
+const CHALLENGE_ICONS: Record<string, React.ReactNode> = {
+  PARKOUR: <Zap className="w-5 h-5 text-amber-400" />,
+  LAVA_BRIDGING: <Flame className="w-5 h-5 text-rose-400" />,
+  NIGHT_SURVIVAL: <Shield className="w-5 h-5 text-purple-400" />,
+  SPEEDRUN_ECONOMY: <Trophy className="w-5 h-5 text-emerald-400" />,
+  PILLAR_MOUNTAIN: <Mountain className="w-5 h-5 text-cyan-400" />,
+};
 
 export default function ChallengesPage() {
-  const [challenges] = useState<ChallengeData[]>(STATIC_CHALLENGES);
+  const [challenges, setChallenges] = useState<ChallengeData[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const getChallengeIcon = (type: string) => {
-    switch (type) {
-      case "PARKOUR_CHASM": return <Zap className="w-5 h-5 text-amber-400" />;
-      case "LAVA_BRIDGING": return <Flame className="w-5 h-5 text-rose-400" />;
-      case "WATER_RIVER": return <Sparkles className="w-5 h-5 text-[#38bdf8]" />;
-      case "NIGHT_SURVIVAL": return <Moon className="w-5 h-5 text-purple-400" />;
-      case "SPEEDRUN_ECONOMY": return <Trophy className="w-5 h-5 text-[#34d399]" />;
-      default: return <Swords className="w-5 h-5 text-slate-400" />;
-    }
-  };
+  useEffect(() => {
+    const fetchChallenges = async () => {
+      try {
+        const res = await fetch("/api/challenges");
+        if (res.ok) {
+          const data = await res.json();
+          setChallenges(data.challenges || []);
+        }
+      } catch (err) {
+        console.error("Failed to load challenges:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchChallenges();
+  }, []);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 space-y-6 select-none">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b-2 border-[#3b4458] pb-4">
-        <div>
-          <div className="flex items-center gap-2.5">
-            <Swords className="w-5 h-5 text-[#fbbf24]" />
-            <h1 className="font-pixel text-xl sm:text-2xl font-bold text-white tracking-wider">
-              MINECRAFT CURRICULUM ARENAS
+    <main className="min-h-screen bg-slate-950 text-slate-100 py-8 px-4 sm:px-6 lg:px-8 font-sans">
+      <div className="max-w-7xl mx-auto space-y-8">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-6">
+          <div className="space-y-1.5">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 font-mono text-xs font-bold">
+              <Swords className="w-3.5 h-3.5" />
+              <span>CURRICULUM CHALLENGE ARENAS</span>
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-mono font-bold tracking-tight text-white">
+              Minecraft Training Scenarios & Leaderboards
             </h1>
+            <p className="text-sm text-slate-400 max-w-3xl">
+              5 distinct procedural arenas testing navigation, bridging, combat survival, and economy speedrun. Each arena assigns a recommended AI character and tracks high scores.
+            </p>
           </div>
-          <p className="font-mono text-xs text-[#94a3b8] mt-1">
-            5 distinct procedural training arenas designed to evaluate navigation, bridging, combat, and economy
-          </p>
+
+          <Link
+            href="/demo"
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-mono font-bold text-xs shadow-md shadow-emerald-500/20 transition"
+          >
+            <Play className="w-4 h-4 fill-current" />
+            <span>Open 3D Voxel Lab</span>
+          </Link>
         </div>
 
-        <Link
-          href="/demo"
-          className="mc-btn mc-btn-primary text-[10px]"
-        >
-          <Play className="w-3.5 h-3.5 fill-current" />
-          <span>OPEN 3D VOXEL LAB</span>
-        </Link>
-      </div>
-
-      {/* Challenges Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {challenges.map((ch) => (
-          <div
-            key={ch.id}
-            className="mc-panel-stone p-5 space-y-4 flex flex-col justify-between"
-          >
-            <div className="space-y-3">
-              <div className="flex items-start justify-between gap-2">
-                <div className="p-2 bg-[#12151e] border-2 border-[#3b4458]">
-                  {getChallengeIcon(ch.challengeType)}
-                </div>
-                <span className={`font-pixel text-[8px] py-0.5 px-1.5 font-bold uppercase ${
-                  ch.difficulty === "Master" || ch.difficulty === "Extreme"
-                    ? "mc-btn mc-btn-danger"
-                    : ch.difficulty === "Hard"
-                    ? "mc-btn mc-btn-gold"
-                    : "mc-btn mc-btn-primary"
-                }`}>
-                  {ch.difficulty}
-                </span>
-              </div>
-
-              <div>
-                <h3 className="font-pixel text-xs font-bold text-white leading-snug">{ch.title}</h3>
-                <p className="font-mono text-[11px] text-[#94a3b8] mt-1 leading-relaxed">{ch.description}</p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-2 font-mono text-xs">
-                <div className="bg-[#12151e] p-2 border border-[#1e2330] text-center">
-                  <span className="text-[#64748b] block font-pixel text-[8px]">PAR TIME</span>
-                  <div className="text-white font-bold mt-0.5">{ch.parTimeSeconds}s</div>
-                </div>
-                <div className="bg-[#12151e] p-2 border border-[#1e2330] text-center">
-                  <span className="text-[#64748b] block font-pixel text-[8px]">TARGET PTS</span>
-                  <div className="text-[#fbbf24] font-bold mt-0.5">+{ch.targetScore}</div>
-                </div>
-              </div>
-            </div>
-
-            <div className="pt-2 border-t-2 border-[#141720]">
-              <Link
-                href={`/demo?challenge=${ch.arenaLevel}`}
-                onClick={() => soundSynth.playDiamondChime()}
-                className="mc-btn mc-btn-primary text-[9px] w-full py-2 flex items-center justify-center gap-1.5"
-              >
-                <Play className="w-3.5 h-3.5 fill-current text-black" />
-                <span>LAUNCH ARENA STAGE {ch.arenaLevel + 1}</span>
-              </Link>
-            </div>
+        {/* Loading State */}
+        {loading && (
+          <div className="flex items-center justify-center py-20">
+            <RefreshCw className="w-6 h-6 text-emerald-400 animate-spin" />
+            <span className="ml-3 text-slate-400 font-mono text-sm">Loading challenges from Neon...</span>
           </div>
-        ))}
+        )}
+
+        {/* Challenges Grid */}
+        {!loading && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {challenges.map((ch, index) => (
+              <div
+                key={ch.id}
+                className="bg-slate-900/80 border border-slate-800 rounded-3xl p-6 space-y-4 flex flex-col justify-between hover:border-slate-700 transition shadow-lg"
+              >
+                <div className="space-y-4">
+                  {/* Header */}
+                  <div className="flex items-start justify-between">
+                    <div className="w-11 h-11 rounded-2xl bg-slate-950 border border-slate-800 flex items-center justify-center shadow-md">
+                      {CHALLENGE_ICONS[ch.challengeType] || <Swords className="w-5 h-5 text-slate-400" />}
+                    </div>
+                    <span className={`px-2.5 py-1 rounded-lg text-[10px] font-bold font-mono uppercase ${
+                      DIFFICULTY_STYLES[ch.difficulty] || "bg-slate-800 text-slate-300"
+                    }`}>
+                      {ch.difficulty}
+                    </span>
+                  </div>
+
+                  {/* Title & Description */}
+                  <div>
+                    <h3 className="text-base font-bold text-white font-mono">{ch.title}</h3>
+                    <p className="text-xs text-slate-400 mt-1.5 leading-relaxed">{ch.description}</p>
+                  </div>
+
+                  {/* Recommended Character */}
+                  <div className="flex items-center gap-2 p-2.5 rounded-xl bg-slate-950 border border-slate-800 font-mono text-xs">
+                    <Bot className="w-3.5 h-3.5 text-purple-400" />
+                    <span className="text-slate-400">Recommended Agent:</span>
+                    <span className="text-purple-300 font-bold">{ch.character}</span>
+                  </div>
+
+                  {/* Metrics */}
+                  <div className="grid grid-cols-2 gap-2 font-mono text-xs">
+                    <div className="bg-slate-950 p-3 rounded-xl border border-slate-800 text-center">
+                      <Clock className="w-3.5 h-3.5 text-slate-500 mx-auto mb-1" />
+                      <span className="text-slate-500 text-[10px] block">PAR TIME</span>
+                      <div className="text-white font-bold mt-0.5">{ch.parTimeSeconds}s</div>
+                    </div>
+                    <div className="bg-slate-950 p-3 rounded-xl border border-slate-800 text-center">
+                      <Target className="w-3.5 h-3.5 text-amber-400 mx-auto mb-1" />
+                      <span className="text-slate-500 text-[10px] block">TARGET SCORE</span>
+                      <div className="text-amber-400 font-bold mt-0.5">+{ch.targetScore}</div>
+                    </div>
+                  </div>
+
+                  {/* Leaderboard Preview */}
+                  {ch.scores && ch.scores.length > 0 && (
+                    <div className="space-y-1.5">
+                      <span className="text-slate-500 text-[10px] font-bold font-mono uppercase">Top Scores:</span>
+                      {ch.scores.slice(0, 2).map((score, idx) => (
+                        <div key={score.id} className="flex items-center justify-between p-2 rounded-lg bg-slate-950 border border-slate-800 font-mono text-[11px]">
+                          <div className="flex items-center gap-2">
+                            <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
+                              idx === 0 ? "bg-amber-500/20 text-amber-300" : "bg-slate-800 text-slate-400"
+                            }`}>
+                              {idx + 1}
+                            </span>
+                            <span className="text-slate-200 font-bold">{score.agentName}</span>
+                          </div>
+                          <span className="text-emerald-400 font-bold">{score.score} pts</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Launch Button */}
+                <div className="pt-3 border-t border-slate-800">
+                  <Link
+                    href={`/demo?challenge=${index}`}
+                    className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-mono font-bold text-xs shadow-md shadow-emerald-500/20 transition"
+                  >
+                    <Play className="w-4 h-4 fill-current" />
+                    <span>Launch Arena Stage {index + 1}</span>
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
-    </div>
+    </main>
   );
 }

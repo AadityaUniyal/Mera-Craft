@@ -1,8 +1,14 @@
 import jwt from "jsonwebtoken";
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { prisma } from "./prisma";
 
-const JWT_SECRET = process.env.JWT_SECRET || "mindcraft_production_hardened_jwt_secret_key_2026_secure";
+function getJwtSecret(): string {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    throw new Error("FATAL: JWT_SECRET environment variable is missing.");
+  }
+  return secret;
+}
 
 export interface TokenPayload {
   userId: string;
@@ -11,12 +17,12 @@ export interface TokenPayload {
 }
 
 export function signToken(payload: TokenPayload): string {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: "7d" });
+  return jwt.sign(payload, getJwtSecret(), { expiresIn: "7d" });
 }
 
 export function verifyToken(token: string): TokenPayload | null {
   try {
-    return jwt.verify(token, JWT_SECRET) as TokenPayload;
+    return jwt.verify(token, getJwtSecret()) as TokenPayload;
   } catch (err) {
     return null;
   }
@@ -29,7 +35,6 @@ export async function getAuthenticatedUser(req: NextRequest): Promise<{ user: an
   if (authHeader && authHeader.startsWith("Bearer ")) {
     token = authHeader.substring(7);
   } else {
-    // Check cookies
     const cookie = req.cookies.get("mindcraft_auth");
     if (cookie) token = cookie.value;
   }
@@ -42,7 +47,20 @@ export async function getAuthenticatedUser(req: NextRequest): Promise<{ user: an
   try {
     const user = await prisma.user.findUnique({
       where: { id: payload.userId },
-      include: { profile: true },
+      select: {
+        id: true,
+        email: true,
+        role: true,
+        createdAt: true,
+        lastActiveAt: true,
+        profile: {
+          select: {
+            id: true,
+            displayName: true,
+            avatarUrl: true,
+          },
+        },
+      },
     });
 
     if (!user) return null;

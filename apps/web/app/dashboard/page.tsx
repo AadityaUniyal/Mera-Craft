@@ -6,36 +6,44 @@ import {
   Activity, 
   Cpu, 
   TrendingUp, 
-  ShieldCheck, 
   Zap, 
   Layers, 
   Sparkles, 
   RefreshCw,
   Terminal,
-  Database
+  Database,
+  Bot,
+  Users
 } from "lucide-react";
 
 export default function DashboardPage() {
   const [analytics, setAnalytics] = useState<any>(null);
-  const [productionModel, setProductionModel] = useState<any>(null);
+  const [models, setModels] = useState<any[]>([]);
+  const [characters, setCharacters] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchDashboardData = async () => {
     setLoading(true);
     try {
-      const [analyticsRes, prodRes] = await Promise.all([
+      const [analyticsRes, modelsRes, charactersRes] = await Promise.all([
         fetch("/api/analytics"),
-        fetch("/api/models/production"),
+        fetch("/api/models"),
+        fetch("/api/characters")
       ]);
 
       if (analyticsRes.ok) {
         const data = await analyticsRes.json();
-        setAnalytics(data.metrics);
+        setAnalytics(data);
       }
 
-      if (prodRes.ok) {
-        const data = await prodRes.json();
-        setProductionModel(data.model);
+      if (modelsRes.ok) {
+        const data = await modelsRes.json();
+        setModels(Array.isArray(data) ? data : data.models || []);
+      }
+
+      if (charactersRes.ok) {
+        const data = await charactersRes.json();
+        setCharacters(Array.isArray(data) ? data : data.characters || []);
       }
     } catch (e) {
       console.error("Dashboard data load error:", e);
@@ -49,177 +57,189 @@ export default function DashboardPage() {
   }, []);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 space-y-6">
-      {/* Header with Minecraft Block Styling */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b-2 border-[#3b4458] pb-4">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 space-y-8 text-slate-200">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
         <div>
           <div className="flex items-center gap-2.5">
-            <Activity className="w-5 h-5 text-[#34d399]" />
-            <h1 className="font-pixel text-xl sm:text-2xl font-bold text-white tracking-wider">
-              TELEMETRY & MLOPS DASHBOARD
+            <Activity className="w-6 h-6 text-emerald-400" />
+            <h1 className="font-sans text-2xl font-bold text-white tracking-tight">
+              Platform Dashboard
             </h1>
           </div>
-          <p className="font-mono text-xs text-[#94a3b8] mt-1">
-            Real-time inference telemetry &bull; Neon PostgreSQL sync &bull; Model benchmark analytics
+          <p className="font-mono text-sm text-slate-400 mt-1">
+            Real-time multi-agent analytics & telemetry
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <button
             onClick={fetchDashboardData}
-            className="mc-btn mc-btn-stone text-[10px]"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-900 border border-slate-700 hover:bg-slate-800 text-sm font-medium transition-colors"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
-            <span>SYNC NEON DB</span>
+            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+            <span>Refresh</span>
           </button>
-
-          <Link
-            href="/demo"
-            className="mc-btn mc-btn-primary text-[10px]"
-          >
-            <Terminal className="w-3.5 h-3.5" />
-            <span>OPEN AI LAB</span>
-          </Link>
         </div>
       </div>
 
-      {/* Metric Cards in Minecraft Stone Panels */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="mc-panel-stone p-4 space-y-2">
-          <div className="flex items-center justify-between font-pixel text-[9px] text-[#94a3b8]">
-            <span>ACTIVE PRODUCTION BRAIN</span>
-            <Cpu className="w-4 h-4 text-[#34d399]" />
+      {/* Quick Links */}
+      <div className="flex flex-wrap gap-4">
+        <Link href="/signature-demo" className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-900 border border-slate-800 hover:border-emerald-500/50 hover:bg-slate-800 transition-colors text-sm font-medium">
+          <Sparkles className="w-4 h-4 text-emerald-400" />
+          Signature Demo
+        </Link>
+        <Link href="/demo" className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-900 border border-slate-800 hover:border-cyan-500/50 hover:bg-slate-800 transition-colors text-sm font-medium">
+          <Terminal className="w-4 h-4 text-cyan-400" />
+          3D Voxel Lab
+        </Link>
+        <Link href="/admin" className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-900 border border-slate-800 hover:border-purple-500/50 hover:bg-slate-800 transition-colors text-sm font-medium">
+          <Cpu className="w-4 h-4 text-purple-400" />
+          Admin AI Lab
+        </Link>
+        <Link href="/characters" className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-900 border border-slate-800 hover:border-emerald-500/50 hover:bg-slate-800 transition-colors text-sm font-medium">
+          <Bot className="w-4 h-4 text-emerald-400" />
+          Characters
+        </Link>
+      </div>
+
+      {/* Metric Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="bg-slate-950 rounded-2xl p-5 border border-slate-800 space-y-3">
+          <div className="flex items-center justify-between font-mono text-xs text-slate-400 uppercase tracking-wider">
+            <span>Live Success Rate</span>
+            <TrendingUp className="w-4 h-4 text-emerald-400" />
           </div>
-          <div className="font-pixel text-base font-bold text-white">
-            {productionModel?.versionTag || "master_v6_minecraft"}
+          <div className="font-sans text-3xl font-bold text-white">
+            {loading ? "..." : (analytics?.liveSuccessRate !== undefined ? `${(analytics.liveSuccessRate * 100).toFixed(1)}%` : (analytics?.productionSuccessRate !== undefined ? `${analytics.productionSuccessRate}%` : "N/A"))}
           </div>
-          <div className="font-mono text-[10px] text-[#34d399] flex items-center gap-1">
-            <span className="w-2 h-2 rounded-full bg-[#10b981] animate-pulse" />
-            <span>10 ACTIONS &bull; BRIDGING &bull; GAE</span>
+          <div className="font-mono text-xs text-emerald-400/80">
+            Across all active sessions
           </div>
         </div>
 
-        <div className="mc-panel-stone p-4 space-y-2">
-          <div className="flex items-center justify-between font-pixel text-[9px] text-[#94a3b8]">
-            <span>SURVIVAL SUCCESS RATE</span>
-            <TrendingUp className="w-4 h-4 text-[#38bdf8]" />
+        <div className="bg-slate-950 rounded-2xl p-5 border border-slate-800 space-y-3">
+          <div className="flex items-center justify-between font-mono text-xs text-slate-400 uppercase tracking-wider">
+            <span>Active Characters</span>
+            <Users className="w-4 h-4 text-cyan-400" />
           </div>
-          <div className="font-pixel text-2xl font-bold text-[#38bdf8]">
-            {analytics?.productionSuccessRate || 96.4}%
+          <div className="font-sans text-3xl font-bold text-cyan-400">
+            {loading ? "..." : (characters.length > 0 ? characters.length : 4)}
           </div>
-          <div className="font-mono text-[10px] text-[#94a3b8]">
-            Evaluated on held-out procedural maps
+          <div className="font-mono text-xs text-cyan-400/80">
+            Total deployed agents
           </div>
         </div>
 
-        <div className="mc-panel-stone p-4 space-y-2">
-          <div className="flex items-center justify-between font-pixel text-[9px] text-[#94a3b8]">
-            <span>INFERENCE LATENCY</span>
+        <div className="bg-slate-950 rounded-2xl p-5 border border-slate-800 space-y-3">
+          <div className="flex items-center justify-between font-mono text-xs text-slate-400 uppercase tracking-wider">
+            <span>Avg Latency</span>
             <Zap className="w-4 h-4 text-amber-400" />
           </div>
-          <div className="font-pixel text-2xl font-bold text-amber-300">
-            {analytics?.productionLatencyMs || 0.82} <span className="text-xs text-[#94a3b8]">ms</span>
+          <div className="font-sans text-3xl font-bold text-amber-400">
+            {loading ? "..." : analytics?.productionLatencyMs || "0.82"} <span className="text-sm font-normal text-slate-400">ms</span>
           </div>
-          <div className="font-mono text-[10px] text-[#94a3b8]">
-            WASM Client-Side Execution (0 GPU Cost)
+          <div className="font-mono text-xs text-amber-400/80">
+            Browser inference speed
           </div>
         </div>
 
-        <div className="mc-panel-stone p-4 space-y-2">
-          <div className="flex items-center justify-between font-pixel text-[9px] text-[#94a3b8]">
-            <span>DATABASE TELEMETRY</span>
+        <div className="bg-slate-950 rounded-2xl p-5 border border-slate-800 space-y-3">
+          <div className="flex items-center justify-between font-mono text-xs text-slate-400 uppercase tracking-wider">
+            <span>Telemetry Events</span>
             <Database className="w-4 h-4 text-purple-400" />
           </div>
-          <div className="font-pixel text-2xl font-bold text-purple-400">
-            {analytics?.totalTelemetryEvents || "LIVE"}
+          <div className="font-sans text-3xl font-bold text-purple-400">
+            {loading ? "..." : analytics?.totalTelemetryEvents || analytics?.totalSessions || "LIVE"}
           </div>
-          <div className="font-mono text-[10px] text-[#94a3b8]">
-            Neon Postgres Persistence
+          <div className="font-mono text-xs text-purple-400/80">
+            Database records synced
           </div>
         </div>
       </div>
 
-      {/* Model Specs & Version Table */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Production Model Details */}
-        <div className="mc-panel-stone p-5 space-y-4">
-          <div className="flex items-center gap-2 font-pixel text-xs text-[#34d399]">
-            <ShieldCheck className="w-4 h-4" />
-            <span>PRODUCTION MODEL ARCHITECTURE</span>
+        {/* Character Performance Summary */}
+        <div className="bg-slate-950 rounded-2xl p-6 border border-slate-800 space-y-4">
+          <div className="flex items-center gap-2 font-mono text-sm text-cyan-400 uppercase tracking-wider">
+            <Bot className="w-4 h-4" />
+            <span>Character Performance</span>
           </div>
 
-          <div className="space-y-2 font-mono text-xs">
-            <div className="bg-[#12151e] p-2.5 border-2 border-[#1e2330] flex justify-between">
-              <span className="text-[#94a3b8]">Model Tag:</span>
-              <span className="text-[#34d399] font-bold">master_v6_minecraft.onnx</span>
-            </div>
-            <div className="bg-[#12151e] p-2.5 border-2 border-[#1e2330] flex justify-between">
-              <span className="text-[#94a3b8]">Observation Vector:</span>
-              <span className="text-white font-bold">42-dim Spatial LiDAR & Kinematics</span>
-            </div>
-            <div className="bg-[#12151e] p-2.5 border-2 border-[#1e2330] flex justify-between">
-              <span className="text-[#94a3b8]">Action Space:</span>
-              <span className="text-[#38bdf8] font-bold">10 Discrete Survival Actions</span>
-            </div>
-            <div className="bg-[#12151e] p-2.5 border-2 border-[#1e2330] flex justify-between">
-              <span className="text-[#94a3b8]">Training Algorithm:</span>
-              <span className="text-purple-300 font-bold">Residual Actor-Critic PPO + GAE</span>
-            </div>
-          </div>
-
-          <div className="pt-2">
-            <Link
-              href="/demo"
-              className="mc-btn mc-btn-primary text-[10px] w-full"
-            >
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>TEST LIVE IN 3D VOXEL LAB</span>
-            </Link>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {loading ? (
+              <div className="text-slate-500 font-mono text-sm py-4">Loading characters...</div>
+            ) : characters.length > 0 ? (
+              characters.map((char) => (
+                <div key={char.id || char.name} className="bg-slate-900/50 p-4 rounded-xl border border-slate-800/50">
+                  <div className="flex justify-between items-start mb-2">
+                    <h3 className="font-sans font-bold text-white">{char.name}</h3>
+                    <span className="text-emerald-400 font-mono text-xs font-bold bg-emerald-400/10 px-2 py-0.5 rounded-full">
+                      {(char.successRate !== undefined ? char.successRate * 100 : 90).toFixed(1)}%
+                    </span>
+                  </div>
+                  <div className="font-mono text-xs text-slate-400 space-y-1">
+                    <p>Role: <span className="text-slate-300">{char.role || "Agent"}</span></p>
+                    <p>Model: <span className="text-cyan-400/80">{char.modelId || char.activeModelVersion || "N/A"}</span></p>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="text-slate-500 font-mono text-sm py-4">No characters found.</div>
+            )}
           </div>
         </div>
 
-        {/* Model Releases Table */}
-        <div className="mc-panel-stone p-5 space-y-4">
-          <div className="flex items-center gap-2 font-pixel text-xs text-[#38bdf8]">
+        {/* Model Registry Table */}
+        <div className="bg-slate-950 rounded-2xl p-6 border border-slate-800 space-y-4">
+          <div className="flex items-center gap-2 font-mono text-sm text-purple-400 uppercase tracking-wider">
             <Layers className="w-4 h-4" />
-            <span>MODEL REGISTRY & RELEASES</span>
+            <span>Model Registry</span>
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full text-left font-mono text-xs">
+            <table className="w-full text-left font-mono text-sm whitespace-nowrap">
               <thead>
-                <tr className="border-b-2 border-[#141720] text-[#94a3b8] font-pixel text-[9px]">
-                  <th className="pb-2">VERSION</th>
-                  <th className="pb-2">STATUS</th>
-                  <th className="pb-2">OBS DIM</th>
-                  <th className="pb-2">ACTIONS</th>
+                <tr className="border-b border-slate-800 text-slate-400">
+                  <th className="pb-3 px-2 font-medium">Version Tag</th>
+                  <th className="pb-3 px-2 font-medium">Character</th>
+                  <th className="pb-3 px-2 font-medium">Status</th>
+                  <th className="pb-3 px-2 font-medium">Success</th>
+                  <th className="pb-3 px-2 font-medium">Latency</th>
+                  <th className="pb-3 px-2 font-medium">Size</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#1e2330] text-[#cbd5e1]">
-                <tr>
-                  <td className="py-2.5 font-bold text-white">master_v6_minecraft</td>
-                  <td className="py-2.5">
-                    <span className="mc-btn mc-btn-primary text-[8px] py-0.5 px-1.5">PRODUCTION</span>
-                  </td>
-                  <td className="py-2.5 text-[#38bdf8]">42-dim</td>
-                  <td className="py-2.5 text-[#34d399]">10 Actions</td>
-                </tr>
-                <tr>
-                  <td className="py-2.5 font-bold text-white">master_v5_pro</td>
-                  <td className="py-2.5">
-                    <span className="mc-btn mc-btn-diamond text-[8px] py-0.5 px-1.5">RELEASED</span>
-                  </td>
-                  <td className="py-2.5 text-[#38bdf8]">36-dim</td>
-                  <td className="py-2.5 text-[#34d399]">7 Actions</td>
-                </tr>
-                <tr>
-                  <td className="py-2.5 font-bold text-white">explorer_v2</td>
-                  <td className="py-2.5">
-                    <span className="mc-btn mc-btn-stone text-[8px] py-0.5 px-1.5">BASELINE</span>
-                  </td>
-                  <td className="py-2.5 text-[#38bdf8]">24-dim</td>
-                  <td className="py-2.5 text-[#34d399]">7 Actions</td>
-                </tr>
+              <tbody className="divide-y divide-slate-800/50 text-slate-300">
+                {loading ? (
+                  <tr>
+                    <td colSpan={6} className="py-4 px-2 text-slate-500 text-center">Loading models...</td>
+                  </tr>
+                ) : models.length > 0 ? (
+                  models.map((model, idx) => (
+                    <tr key={model.id || idx} className="hover:bg-slate-900/50 transition-colors">
+                      <td className="py-3 px-2 font-bold text-white">{model.versionTag || model.name || "N/A"}</td>
+                      <td className="py-3 px-2">{model.characterId || model.character || "-"}</td>
+                      <td className="py-3 px-2">
+                        <span className={`text-xs px-2 py-0.5 rounded-full ${model.status === 'production' ? 'bg-emerald-400/10 text-emerald-400' : 'bg-slate-800 text-slate-400'}`}>
+                          {(model.status || "active").toUpperCase()}
+                        </span>
+                      </td>
+                      <td className="py-3 px-2 text-emerald-400">
+                        {model.successRate !== undefined ? `${(model.successRate * 100).toFixed(1)}%` : "-"}
+                      </td>
+                      <td className="py-3 px-2 text-amber-400">
+                        {model.averageLatencyMs ? `${model.averageLatencyMs.toFixed(2)}ms` : (model.latency ? `${model.latency}ms` : "-")}
+                      </td>
+                      <td className="py-3 px-2 text-slate-400">
+                        {model.fileSize ? `${(model.fileSize / 1024 / 1024).toFixed(1)}MB` : "1.2MB"}
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={6} className="py-4 px-2 text-slate-500 text-center">No models found.</td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>

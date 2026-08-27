@@ -1,8 +1,7 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import * as THREE from "three";
 import { 
   Bot, 
   Cpu, 
@@ -17,337 +16,268 @@ import {
   CheckCircle2, 
   Box,
   Compass,
-  Eye
+  Hammer,
+  Shield,
+  Heart
 } from "lucide-react";
-import { soundSynth } from "@/lib/audio/sound-synth";
 
-interface CharacterModel {
-  id: string;
+interface CharacterProfile {
+  slug: string;
   name: string;
-  callsign: string;
   role: string;
+  badge: string;
   icon: string;
-  shirtColor: number;
-  pantsColor: number;
-  skinColor: number;
-  modelFile: string;
-  description: string;
-  trainingCurriculum: string;
-  timestepsTrained: number;
+  color: string;
+  curiosity: number;
+  riskTolerance: number;
+  activeModel: string;
   successRate: number;
-  skills: {
-    mining: number;
-    bridging: number;
-    combat: number;
-    parkour: number;
-    survival: number;
-  };
-  triggerLogic: string;
+  description: string;
+  priorityTask: string;
+  skills: { name: string; proficiency: number }[];
+  trainingMethod: string;
 }
 
-const CHARACTERS: CharacterModel[] = [
+const CHARACTERS: CharacterProfile[] = [
   {
-    id: "steve_master",
-    name: "Steve — Master Miner",
-    callsign: "AGENT_MINER_V6",
-    role: "Resource Extraction & Speedrun Economy",
-    icon: "⛏️",
-    shirtColor: 0x0284c7, // Cyan/Blue
-    pantsColor: 0x1e3a8a, // Navy
-    skinColor: 0xfde047,
-    modelFile: "master_v6_minecraft",
-    description: "Trained across 500,000 steps with GAE on full Minecraft crafting graphs. Automatically seeks wood, crafts pickaxes, mines iron, extracts diamonds, and delivers resources to the base hub.",
-    trainingCurriculum: "Multi-Tier Speedrun Economy & Crafting Hierarchy",
-    timestepsTrained: 500000,
-    successRate: 96.8,
-    skills: { mining: 98, bridging: 75, combat: 80, parkour: 85, survival: 94 },
-    triggerLogic: "Detects diamond/ore proximity within 7.0m LiDAR cone -> activates mining strike -> navigates return trajectory to base hub upon full bag.",
+    slug: "explorer",
+    name: "Explorer",
+    role: "Autonomous Scout & River Crosser",
+    badge: "CURRICULUM PPO + CURIOSITY",
+    icon: "🧭",
+    color: "from-cyan-500 to-blue-600",
+    curiosity: 0.95,
+    riskTolerance: 0.60,
+    activeModel: "explorer_v2.onnx",
+    successRate: 88.5,
+    description: "Trained through 6 curriculum levels to explore procedurally varied terrain, avoid lava hazards, navigate arbitrary river widths (3 to 6 blocks), and reach remote diamond nodes.",
+    priorityTask: "Discover new territory, cross rivers safely, and return to base",
+    skills: [
+      { name: "River Crossing (Water Evasion)", proficiency: 92 },
+      { name: "Lava Hazard Proximity Routing", proficiency: 95 },
+      { name: "Mountain Cliff Escalation", proficiency: 88 },
+      { name: "Intrinsic Map Discovery", proficiency: 96 },
+    ],
+    trainingMethod: "PPO with Generalized Advantage Estimation & Intrinsic Curiosity Module (ICM)",
   },
   {
-    id: "alex_bridger",
-    name: "Alex — Lava Bridger",
-    callsign: "AGENT_BRIDGER_V6",
-    role: "Lava/Water Hazard Traversal & Edge Protection",
+    slug: "guardian",
+    name: "Guardian",
+    role: "Tactical Base & Target Defender",
+    badge: "THREAT INTERCEPTION PPO",
+    icon: "🛡️",
+    color: "from-purple-500 to-indigo-600",
+    curiosity: 0.15,
+    riskTolerance: 0.90,
+    activeModel: "guardian_v1.onnx",
+    successRate: 91.2,
+    description: "Specialized in perimeter defense and threat interception. Calculates lead angles on approaching hostile Creepers and sprints to eliminate threats before base penetration.",
+    priorityTask: "Protect player and Base Hub from hostile intruders, eliminate Creepers",
+    skills: [
+      { name: "Threat Lead-Angle Interception", proficiency: 95 },
+      { name: "Base Perimeter Station Holding", proficiency: 94 },
+      { name: "Sprinting Pursuit Dash", proficiency: 92 },
+      { name: "Tactical Tactical Retreat & Recovery", proficiency: 86 },
+    ],
+    trainingMethod: "Multi-Agent Threat Simulation PPO with Proximity Reward Delta Shaping",
+  },
+  {
+    slug: "builder",
+    name: "Builder",
+    role: "Structural Engineer & Chasm Bridger",
+    badge: "IMITATION LEARNING + PPO",
     icon: "🧱",
-    shirtColor: 0x16a34a, // Green
-    pantsColor: 0x582f0e, // Brown
-    skinColor: 0xfcd34d,
-    modelFile: "master_v6_minecraft",
-    description: "Specialized in hazardous terrain navigation. Uses sneak crouching to clamp position to block edges and executes precision block placement to build cobblestone skyways across lava chasms.",
-    trainingCurriculum: "Lava Lake Bridging & Safe Sneak Clamping",
-    timestepsTrained: 350000,
-    successRate: 98.4,
-    skills: { mining: 70, bridging: 99, combat: 65, parkour: 88, survival: 98 },
-    triggerLogic: "When hazard ray detects lava/water in heading vector (<1.5m) -> initiates sneak mode -> places cobblestone block directly in front -> steps safely onto bridge.",
+    color: "from-amber-500 to-orange-600",
+    curiosity: 0.40,
+    riskTolerance: 0.20,
+    activeModel: "builder_v1.onnx",
+    successRate: 86.4,
+    description: "Trained using Behavioral Cloning from expert bridging demonstrations followed by PPO fine-tuning. Automatically sneaks to ledge edges and places cobblestone blocks to build bridges across rivers.",
+    priorityTask: "Construct bridges over rivers/chasms and erect defensive structures efficiently",
+    skills: [
+      { name: "Safe Edge Sneak Bridging", proficiency: 94 },
+      { name: "Chasm Span Construction", proficiency: 88 },
+      { name: "Defensive Wall Erection", proficiency: 85 },
+      { name: "Material Efficiency Optimization", proficiency: 90 },
+    ],
+    trainingMethod: "Behavioral Cloning (Expert Demonstrations) + PPO Fine-Tuning",
   },
   {
-    id: "vanguard_hunter",
-    name: "Vanguard — Creeper Hunter",
-    callsign: "AGENT_COMBAT_V5",
-    role: "Hostile Mob Defense & Tactical Evasion",
-    icon: "🏹",
-    shirtColor: 0x7e22ce, // Purple Knight Armor
-    pantsColor: 0x3b0764, // Dark Obsidian
-    skinColor: 0xe2e8f0,
-    modelFile: "master_v5_pro",
-    description: "Trained specifically for hostile night survival. Perceives Creeper threat vectors via 4-directional proximity sensors, maintaining a 3-block safety standoff radius while executing counter-strikes.",
-    trainingCurriculum: "Night Creeper Proximity Tracking & Tactical Retreat",
-    timestepsTrained: 400000,
-    successRate: 94.2,
-    skills: { mining: 60, bridging: 70, combat: 98, parkour: 80, survival: 96 },
-    triggerLogic: "Perceives Creeper within 6.0m vector -> triggers sprint evasive turn if dist < 2.5m -> circles to blind spot -> strikes with diamond weapon.",
-  },
-  {
-    id: "shadow_runner",
-    name: "Shadow — Parkour Runner",
-    callsign: "AGENT_PARKOUR_V5",
-    role: "Precision Velocity Jumping & Mountain Ascent",
-    icon: "⚡",
-    shirtColor: 0xd97706, // Amber Speedrunner
-    pantsColor: 0x1e293b, // Dark Slate
-    skinColor: 0xfde68a,
-    modelFile: "master_v5_pro",
-    description: "Optimized for maximum traversal speed and gap clearance. Calculates sprint momentum and executes synchronized 1-to-2 block parkour leaps across sheer mountain canyons.",
-    trainingCurriculum: "Chasm Gap Precision Leaps & Vertical Ascent",
-    timestepsTrained: 300000,
-    successRate: 95.0,
-    skills: { mining: 50, bridging: 80, combat: 60, parkour: 99, survival: 90 },
-    triggerLogic: "Evaluates ground depth delta via forward LiDAR ray -> engages sprint acceleration 1 block before gap -> executes jump at exact block edge.",
+    slug: "survivor",
+    name: "Survivor",
+    role: "Full Speedrun Economy Specialist",
+    badge: "10-ACTION MASTER RL",
+    icon: "💎",
+    color: "from-emerald-500 to-teal-600",
+    curiosity: 0.70,
+    riskTolerance: 0.40,
+    activeModel: "master_v6_minecraft.onnx",
+    successRate: 85.0,
+    description: "Master multi-task policy executing the full Minecraft economy loop: chop Oak Wood -> craft Pickaxe -> mine Iron & Diamond -> manage Health & Hunger -> deposit at Base Hub before nightfall.",
+    priorityTask: "Manage health & stamina, harvest economic progression, deposit at Base",
+    skills: [
+      { name: "Hierarchical Crafting Graph", proficiency: 92 },
+      { name: "Health & Hunger Management", proficiency: 90 },
+      { name: "Multi-Tier Mining Progression", proficiency: 89 },
+      { name: "Base Hub Resource Deposit", proficiency: 94 },
+    ],
+    trainingMethod: "Hierarchical Multi-Task PPO across 5 Diverse Challenge Scenarios",
   },
 ];
 
 export default function CharactersPage() {
-  const [activeBot, setActiveBot] = useState<CharacterModel>(CHARACTERS[0]);
-  const mountRef = useRef<HTMLDivElement>(null);
-  const botGroupRef = useRef<THREE.Group | null>(null);
-
-  const handleSelect = (bot: CharacterModel) => {
-    setActiveBot(bot);
-    soundSynth.playBlockPlace();
-  };
-
-  // 3D Avatar Rendering in Three.js
-  useEffect(() => {
-    if (!mountRef.current) return;
-    const width = mountRef.current.clientWidth;
-    const height = mountRef.current.clientHeight;
-
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x0a0d14);
-
-    const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
-    camera.position.set(0, 1.8, 4.5);
-    camera.lookAt(0, 0.9, 0);
-
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(width, height);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    mountRef.current.appendChild(renderer.domElement);
-
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.85);
-    scene.add(ambientLight);
-
-    const dirLight = new THREE.DirectionalLight(0xfff5dd, 1.3);
-    dirLight.position.set(4, 6, 4);
-    scene.add(dirLight);
-
-    // Floor
-    const grid = new THREE.GridHelper(6, 6, 0x3b4458, 0x1e2330);
-    grid.position.y = -0.01;
-    scene.add(grid);
-
-    // Character Group
-    const group = new THREE.Group();
-    scene.add(group);
-    botGroupRef.current = group;
-
-    // Body
-    const bodyGeo = new THREE.BoxGeometry(0.6, 0.8, 0.4);
-    const bodyMat = new THREE.MeshStandardMaterial({ color: activeBot.shirtColor, roughness: 0.3 });
-    const body = new THREE.Mesh(bodyGeo, bodyMat);
-    body.position.y = 0.8;
-    group.add(body);
-
-    // Head
-    const headGeo = new THREE.BoxGeometry(0.48, 0.48, 0.48);
-    const headMat = new THREE.MeshStandardMaterial({ color: activeBot.skinColor, roughness: 0.5 });
-    const head = new THREE.Mesh(headGeo, headMat);
-    head.position.y = 1.44;
-    group.add(head);
-
-    // Legs
-    const legGeo = new THREE.BoxGeometry(0.24, 0.55, 0.3);
-    const legMat = new THREE.MeshStandardMaterial({ color: activeBot.pantsColor, roughness: 0.5 });
-    const leftLeg = new THREE.Mesh(legGeo, legMat);
-    leftLeg.position.set(-0.15, 0.22, 0);
-    const rightLeg = new THREE.Mesh(legGeo, legMat);
-    rightLeg.position.set(0.15, 0.22, 0);
-    group.add(leftLeg, rightLeg);
-
-    let frameId: number;
-    const animate = () => {
-      frameId = requestAnimationFrame(animate);
-      group.rotation.y += 0.015;
-      renderer.render(scene, camera);
-    };
-    animate();
-
-    return () => {
-      cancelAnimationFrame(frameId);
-      if (mountRef.current && renderer.domElement) {
-        mountRef.current.removeChild(renderer.domElement);
-      }
-    };
-  }, [activeBot]);
+  const [selectedChar, setSelectedChar] = useState<CharacterProfile>(CHARACTERS[0]);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 space-y-6 select-none">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b-2 border-[#3b4458] pb-4">
-        <div>
-          <div className="flex items-center gap-2.5">
-            <Bot className="w-5 h-5 text-[#34d399]" />
-            <h1 className="font-pixel text-xl sm:text-2xl font-bold text-white tracking-wider">
-              TRAINED AI CHARACTER ROSTER
-            </h1>
+    <main className="min-h-screen bg-slate-950 text-slate-100 py-8 px-4 sm:px-6 lg:px-8 font-sans">
+      <div className="max-w-7xl mx-auto space-y-8">
+        {/* Header */}
+        <div className="space-y-2 border-b border-slate-800 pb-6">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/30 text-purple-400 font-mono text-xs font-bold">
+            <Bot className="w-3.5 h-3.5" />
+            <span>AI CHARACTERS & SPECIALIZED ROLES</span>
           </div>
-          <p className="font-mono text-xs text-[#94a3b8] mt-1">
-            Individually trained PyTorch PPO neural policies &bull; Custom behavioral logic &bull; Live arena testing
+          <h1 className="text-2xl sm:text-3xl font-mono font-bold tracking-tight text-white">
+            Embodied Character Intelligence Roster
+          </h1>
+          <p className="text-sm text-slate-400 max-w-3xl">
+            Each AI character possesses a unique DNA profile, distinct reward priorities, specialized curriculum, and active model version.
           </p>
         </div>
 
-        <Link
-          href={`/demo?model=${activeBot.modelFile}`}
-          className="mc-btn mc-btn-primary text-[10px]"
-        >
-          <Play className="w-3.5 h-3.5 fill-current" />
-          <span>TEST {activeBot.name.toUpperCase()} IN ARENA</span>
-        </Link>
-      </div>
-
-      {/* Character Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {CHARACTERS.map((char) => {
-          const isSelected = activeBot.id === char.id;
-          return (
-            <div
-              key={char.id}
-              onClick={() => handleSelect(char)}
-              className={`mc-panel-stone p-4 space-y-3 cursor-pointer transition-all ${
-                isSelected
-                  ? "border-2 border-[#10b981] bg-[#10b981]/10 shadow-[0_0_15px_rgba(16,185,129,0.25)]"
-                  : "hover:border-[#727e99]"
-              }`}
-            >
-              <div className="flex items-start justify-between">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-10 h-10 bg-[#12151e] border-2 border-[#3b4458] flex items-center justify-center text-2xl shadow">
-                    {char.icon}
+        {/* Character Selection Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {CHARACTERS.map((c) => {
+            const isSelected = selectedChar.slug === c.slug;
+            return (
+              <button
+                key={c.slug}
+                onClick={() => setSelectedChar(c)}
+                className={`p-5 rounded-2xl border text-left transition relative flex flex-col justify-between ${
+                  isSelected
+                    ? "bg-slate-900 border-white shadow-xl shadow-slate-900/80 ring-1 ring-white/50"
+                    : "bg-slate-900/50 border-slate-800 hover:border-slate-700 opacity-80"
+                }`}
+              >
+                <div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-3xl">{c.icon}</span>
+                    <span className="px-2 py-0.5 rounded bg-slate-950 font-mono text-[10px] font-bold text-emerald-400 border border-slate-800">
+                      {c.successRate}% WIN
+                    </span>
                   </div>
-                  <div>
-                    <h3 className="font-pixel text-xs font-bold text-white">{char.name}</h3>
-                    <span className="font-mono text-[10px] text-[#34d399]">{char.callsign}</span>
-                  </div>
+                  <h3 className="text-base font-bold text-white mt-3">{c.name}</h3>
+                  <div className="text-xs text-slate-400 font-mono">{c.role}</div>
                 </div>
-              </div>
 
-              <p className="font-mono text-[11px] text-[#94a3b8] leading-tight line-clamp-3">
-                {char.description}
-              </p>
-
-              <div className="grid grid-cols-2 gap-1.5 font-mono text-[10px]">
-                <div className="bg-[#12151e] p-1.5 border border-[#1e2330]">
-                  <span className="text-[#64748b] block font-pixel text-[7px]">SUCCESS:</span>
-                  <span className="text-[#34d399] font-bold">{char.successRate}%</span>
+                <div className="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-[11px] font-mono text-slate-500">
+                  <span>Model:</span>
+                  <span className="text-slate-300 font-bold">{c.activeModel}</span>
                 </div>
-                <div className="bg-[#12151e] p-1.5 border border-[#1e2330]">
-                  <span className="text-[#64748b] block font-pixel text-[7px]">TRAINED:</span>
-                  <span className="text-amber-400 font-bold">{(char.timestepsTrained / 1000).toFixed(0)}k</span>
-                </div>
-              </div>
-
-              <div className="pt-2 border-t-2 border-[#141720]">
-                <button
-                  className={`mc-btn ${isSelected ? "mc-btn-primary" : "mc-btn-stone"} text-[8px] w-full py-1`}
-                >
-                  {isSelected ? "ACTIVE SELECTION" : "VIEW DETAILS"}
-                </button>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Deep Character Specification & 3D Avatar Inspector */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* 3D Bot Avatar Viewer */}
-        <div className="mc-panel-stone p-4 flex flex-col justify-between space-y-3">
-          <div className="flex items-center justify-between border-b-2 border-[#141720] pb-2">
-            <span className="font-pixel text-[9px] text-white flex items-center gap-1.5">
-              <Eye className="w-3.5 h-3.5 text-[#34d399]" />
-              <span>3D BOT AVATAR INSPECTOR</span>
-            </span>
-            <span className="font-mono text-[9px] text-[#34d399]">360° Real-time</span>
-          </div>
-
-          <div ref={mountRef} className="w-full h-48 rounded bg-[#0b0d13] border border-[#1e2330]" />
-
-          <div className="text-center font-mono text-[10px] text-[#94a3b8]">
-            Skin Profile: <strong className="text-white">{activeBot.name}</strong>
-          </div>
+              </button>
+            );
+          })}
         </div>
 
-        {/* Skill Matrix & Trigger Flow */}
-        <div className="lg:col-span-2 mc-panel-stone p-5 space-y-4">
-          <div className="flex items-center justify-between border-b-2 border-[#141720] pb-2">
-            <div>
-              <h2 className="font-pixel text-xs font-bold text-white flex items-center gap-2">
-                <Cpu className="w-4 h-4 text-[#34d399]" />
-                <span>{activeBot.name} — TECHNICAL SPECIFICATION</span>
-              </h2>
-              <span className="font-mono text-[10px] text-[#38bdf8]">{activeBot.role}</span>
-            </div>
-            <Link
-              href={`/demo?model=${activeBot.modelFile}`}
-              className="mc-btn mc-btn-diamond text-[8px] px-2.5 py-1"
-            >
-              <Play className="w-3 h-3 fill-current" />
-              <span>TEST IN ARENA</span>
-            </Link>
-          </div>
-
-          {/* Skill Polar Matrix */}
-          <div className="space-y-1.5 bg-[#12151e] p-3 border border-[#1e2330]">
-            <span className="font-pixel text-[8px] text-[#34d399] block mb-1">
-              NEURAL CAPABILITY PROFILE:
-            </span>
-            {Object.entries(activeBot.skills).map(([skill, val]) => (
-              <div key={skill} className="space-y-0.5">
-                <div className="flex justify-between font-pixel text-[7px] text-[#94a3b8] uppercase">
-                  <span>{skill}:</span>
-                  <span className="text-white font-mono">{val}%</span>
-                </div>
-                <div className="h-1.5 bg-[#0b0d13] border border-[#32394a] overflow-hidden">
-                  <div
-                    className="h-full bg-gradient-to-r from-[#059669] to-[#34d399]"
-                    style={{ width: `${val}%` }}
-                  />
-                </div>
+        {/* Detailed Character DNA Profile Card */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 bg-slate-900/80 border border-slate-800 rounded-3xl p-6 sm:p-8 backdrop-blur-md">
+          {/* Left Column: Personality, Curiosity & Priorities */}
+          <div className="lg:col-span-6 space-y-6">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-2xl bg-slate-950 border border-slate-800 flex items-center justify-center text-2xl shadow-md">
+                {selectedChar.icon}
               </div>
-            ))}
-          </div>
+              <div>
+                <h2 className="text-xl font-bold font-mono text-white">{selectedChar.name}</h2>
+                <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-mono text-[10px] font-bold uppercase">
+                  {selectedChar.badge}
+                </span>
+              </div>
+            </div>
 
-          {/* Mathematical Trigger Logic */}
-          <div className="bg-[#12151e] p-3 border border-[#1e2330] font-mono text-xs text-slate-300">
-            <span className="font-pixel text-[8px] text-amber-400 block mb-1">
-              BEHAVIORAL PROXIMITY TRIGGER LOGIC:
-            </span>
-            <p className="text-[11px] leading-relaxed text-slate-200">
-              {activeBot.triggerLogic}
+            <p className="text-sm text-slate-300 leading-relaxed">
+              {selectedChar.description}
             </p>
+
+            <div className="space-y-3 bg-slate-950 p-4 rounded-2xl border border-slate-800 font-mono text-xs">
+              <span className="text-slate-400 font-bold uppercase text-[11px]">Character DNA Attributes:</span>
+              
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between text-slate-300">
+                  <span>Curiosity & Exploration Weight:</span>
+                  <span className="text-cyan-400 font-bold">{(selectedChar.curiosity * 100).toFixed(0)}%</span>
+                </div>
+                <div className="w-full bg-slate-900 rounded-full h-2 overflow-hidden border border-slate-800">
+                  <div className="h-full bg-cyan-400 rounded-full" style={{ width: `${selectedChar.curiosity * 100}%` }} />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between text-slate-300">
+                  <span>Combat & Risk Tolerance:</span>
+                  <span className="text-purple-400 font-bold">{(selectedChar.riskTolerance * 100).toFixed(0)}%</span>
+                </div>
+                <div className="w-full bg-slate-900 rounded-full h-2 overflow-hidden border border-slate-800">
+                  <div className="h-full bg-purple-400 rounded-full" style={{ width: `${selectedChar.riskTolerance * 100}%` }} />
+                </div>
+              </div>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 font-mono text-xs space-y-1">
+              <span className="text-slate-500 text-[10px] font-bold uppercase">Primary Directive:</span>
+              <div className="text-white font-bold">{selectedChar.priorityTask}</div>
+            </div>
+          </div>
+
+          {/* Right Column: Skills Library & Model Info */}
+          <div className="lg:col-span-6 space-y-6">
+            <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800 font-mono space-y-4">
+              <span className="text-slate-400 font-bold uppercase text-xs">Specialized Skills Library:</span>
+
+              <div className="space-y-3">
+                {selectedChar.skills.map((s, idx) => (
+                  <div key={idx} className="space-y-1">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-slate-200">{s.name}</span>
+                      <span className="text-emerald-400 font-bold">{s.proficiency}%</span>
+                    </div>
+                    <div className="w-full bg-slate-900 rounded-full h-1.5 overflow-hidden border border-slate-800">
+                      <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${s.proficiency}%` }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="bg-slate-950 p-4 rounded-2xl border border-slate-800 font-mono text-xs space-y-2">
+              <span className="text-slate-500 text-[10px] font-bold uppercase">Training Methodology:</span>
+              <div className="text-slate-300 text-xs">{selectedChar.trainingMethod}</div>
+              <div className="pt-2 flex items-center justify-between border-t border-slate-900 text-slate-400">
+                <span>Active Artifact:</span>
+                <span className="text-white font-bold">/models/{selectedChar.activeModel}</span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <Link
+                href="/demo"
+                className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-mono font-bold text-xs shadow-md shadow-emerald-500/20 transition"
+              >
+                <Play className="w-4 h-4 fill-current" />
+                <span>Simulate {selectedChar.name} in 3D Lab</span>
+              </Link>
+
+              <Link
+                href="/signature-demo"
+                className="flex items-center gap-2 px-4 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-mono font-bold text-xs border border-slate-700 transition"
+              >
+                <Sparkles className="w-4 h-4 text-cyan-400" />
+                <span>Signature Benchmark</span>
+              </Link>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </main>
   );
 }

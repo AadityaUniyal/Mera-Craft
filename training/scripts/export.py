@@ -33,7 +33,7 @@ def export_model_to_onnx(checkpoint_path: str | Path, output_path: str | Path, o
     model = MindcraftActorCritic(obs_dim=obs_dim, action_dim=action_dim)
 
     if checkpoint_path.exists():
-        checkpoint = torch.load(checkpoint_path, map_location="cpu")
+        checkpoint = torch.load(checkpoint_path, map_location="cpu", weights_only=True)
         state_dict = checkpoint["model_state_dict"] if "model_state_dict" in checkpoint else checkpoint
         model.load_state_dict(state_dict)
         print("[+] Checkpoint weights loaded successfully.")

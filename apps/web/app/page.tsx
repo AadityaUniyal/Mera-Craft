@@ -18,7 +18,13 @@ import {
   Flame,
   BrainCircuit,
   Skull,
-  User
+  User,
+  Compass,
+  Shield,
+  Hammer,
+  Gem,
+  Zap,
+  Database
 } from "lucide-react";
 import { soundSynth } from "@/lib/audio/sound-synth";
 
@@ -183,146 +189,214 @@ export default function LandingPage() {
   }, []);
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#0c0f17] relative overflow-hidden select-none">
+    <div className="flex flex-col min-h-screen bg-slate-950 relative overflow-x-hidden select-none font-sans">
       {/* 3D WebGL Background Canvas */}
-      <div ref={mountRef} className="absolute inset-0 pointer-events-none z-0" />
+      <div ref={mountRef} className="fixed inset-0 pointer-events-none z-0" />
 
-      {/* Hero Section */}
-      <section className="flex-1 flex flex-col items-center justify-center text-center px-4 py-14 relative z-10 max-w-5xl mx-auto">
-        {/* Minecraft Animated Block Badge */}
-        <div className="mb-4">
-          <div className="h-14 w-14 mx-auto bg-[#10b981] border-2 border-t-[#6ee7b7] border-l-[#6ee7b7] border-r-[#047857] border-b-[#047857] shadow-2xl flex items-center justify-center">
-            <Bot className="h-8 w-8 text-[#0c0f17]" />
+      <main className="relative z-10 w-full flex flex-col items-center pt-24 pb-16 px-4 space-y-20">
+        
+        {/* HERO SECTION */}
+        <section className="text-center max-w-4xl mx-auto flex flex-col items-center">
+          <div className="mb-6 flex items-center justify-center h-16 w-16 rounded-2xl bg-slate-900 border border-slate-800 shadow-xl text-emerald-400">
+            <Bot className="h-8 w-8" />
           </div>
-        </div>
-
-        {/* Wordmark */}
-        <h1 className="font-pixel text-3xl sm:text-5xl lg:text-6xl font-extrabold text-white tracking-wider mb-3 text-shadow">
-          MIND<span className="text-[#34d399]">CRAFT</span>
-        </h1>
-
-        {/* Tagline */}
-        <div className="inline-block bg-[#1e2330]/90 border-2 border-[#3b4458] px-4 py-1.5 mb-4 shadow-xl">
-          <p className="font-pixel text-xs sm:text-sm text-[#38bdf8] uppercase tracking-wider">
-            AUTONOMOUS 3D EMBODIED AI VOXEL PLATFORM
-          </p>
-        </div>
-
-        {/* Sub-description */}
-        <p className="text-xs sm:text-sm text-[#cbd5e1] font-mono max-w-2xl mx-auto leading-relaxed mb-6 bg-[#0c0f17]/80 p-3 border border-[#32394a]">
-          PyTorch PPO Actor-Critic &bull; 42-Dim Spatial Laser LiDAR &bull; Zero Backend Cost ONNX WebAssembly &bull; Real-time Physics, Bridging & Mob Combat
-        </p>
-
-        {/* Main Navigation Portal Buttons */}
-        <div className="flex flex-wrap items-center justify-center gap-3 mb-10">
-          <Link
-            href="/demo"
-            onClick={() => soundSynth.playDiamondChime()}
-            className="mc-btn mc-btn-primary text-xs px-5 py-2.5"
-          >
-            <Terminal className="w-4 h-4 text-black" />
-            <span>3D VOXEL AI LAB</span>
-          </Link>
-
-          <Link
-            href="/trainer"
-            onClick={() => soundSynth.playLevelUp()}
-            className="mc-btn mc-btn-gold text-xs px-5 py-2.5"
-          >
-            <BrainCircuit className="w-4 h-4 text-black" />
-            <span>LIVE RL TRAINER</span>
-          </Link>
-
-          <Link
-            href="/characters"
-            onClick={() => soundSynth.playBlockPlace()}
-            className="mc-btn mc-btn-diamond text-xs px-5 py-2.5"
-          >
-            <Bot className="w-4 h-4 text-black" />
-            <span>BOT ROSTER</span>
-          </Link>
-
-          <Link
-            href="/profile"
-            onClick={() => soundSynth.playBlockPlace()}
-            className="mc-btn mc-btn-stone text-xs px-4 py-2.5"
-          >
-            <User className="w-4 h-4 text-[#34d399]" />
-            <span>PLAYER PROFILE</span>
-          </Link>
-        </div>
-
-        {/* Feature Highlights Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full text-left">
-          <div className="mc-panel-stone p-4 space-y-2 shadow-xl">
-            <div className="flex items-center gap-2 font-pixel text-xs text-[#34d399]">
-              <Eye className="w-4 h-4" />
-              <span>3D LASER LIDAR VISION</span>
-            </div>
-            <p className="text-[11px] text-[#94a3b8] font-mono leading-relaxed">
-              8 color-coded laser rays scanning obstacles, water, lava lakes, and hostile Creepers in real time.
-            </p>
-          </div>
-
-          <div className="mc-panel-stone p-4 space-y-2 shadow-xl">
-            <div className="flex items-center gap-2 font-pixel text-xs text-[#fbbf24]">
-              <Cpu className="w-4 h-4" />
-              <span>PPO CONTINUOUS ENGINE</span>
-            </div>
-            <p className="text-[11px] text-[#94a3b8] font-mono leading-relaxed">
-              Generalized Advantage Estimation (GAE $\lambda=0.95, \gamma=0.99$) with resumable checkpoint pipeline.
-            </p>
-          </div>
-
-          <div className="mc-panel-stone p-4 space-y-2 shadow-xl">
-            <div className="flex items-center gap-2 font-pixel text-xs text-[#38bdf8]">
-              <ShieldCheck className="w-4 h-4" />
-              <span>TRUE VOXEL PHYSICS</span>
-            </div>
-            <p className="text-[11px] text-[#94a3b8] font-mono leading-relaxed">
-              Hazard prevention clamps, crouch sneak edge protection, and cobblestone bridging over lava chasms.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* Curriculum Arenas Section */}
-      <section className="py-10 px-4 max-w-6xl mx-auto w-full relative z-10 border-t-2 border-[#1e2330]">
-        <div className="text-center mb-6">
-          <h2 className="font-pixel text-lg sm:text-xl font-bold text-white mb-1">
-            CURRICULUM CHALLENGE ARENAS
+          <h1 className="text-4xl sm:text-6xl font-extrabold text-white tracking-tight mb-6">
+            MIND<span className="text-emerald-400">CRAFT</span>
+          </h1>
+          <h2 className="text-lg sm:text-2xl text-slate-300 font-medium max-w-2xl mb-4 leading-relaxed">
+            4 Specialized AI Characters with Distinct DNA, Trained via Curriculum PPO, Behavioral Cloning & Threat Interception
           </h2>
-          <p className="text-xs text-[#94a3b8] font-mono">
-            Test trained neural policies against demanding Minecraft survival environments.
-          </p>
-        </div>
+          <div className="flex flex-wrap items-center justify-center gap-4 mt-8">
+            <Link
+              href="/demo"
+              onClick={() => soundSynth.playDiamondChime?.()}
+              className="px-6 py-3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-semibold rounded-2xl flex items-center gap-2 transition-colors"
+            >
+              <Play className="w-5 h-5 fill-current" />
+              <span>Launch 3D Voxel AI Lab</span>
+            </Link>
+            <Link
+              href="/characters"
+              onClick={() => soundSynth.playBlockPlace?.()}
+              className="px-6 py-3 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-white font-semibold rounded-2xl flex items-center gap-2 transition-colors"
+            >
+              <Bot className="w-5 h-5 text-emerald-400" />
+              <span>Bot Roster</span>
+            </Link>
+          </div>
+        </section>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Link href="/demo?challenge=0" className="mc-panel-dark p-4 space-y-2 border-l-4 border-l-[#10b981] hover:border-[#10b981] transition">
-            <span className="font-pixel text-[9px] text-[#34d399]">STAGE 1</span>
-            <h3 className="font-pixel text-xs font-bold text-white">PRECISION PARKOUR</h3>
-            <p className="text-[10px] text-[#94a3b8] font-mono">2-block chasm leaps with velocity and sprint momentum management.</p>
-          </Link>
+        {/* CHARACTER SPOTLIGHT */}
+        <section className="w-full max-w-6xl mx-auto">
+          <div className="text-center mb-10">
+            <h3 className="text-2xl font-bold text-white flex items-center justify-center gap-2">
+              <Sparkles className="w-6 h-6 text-emerald-400" />
+              Character Spotlight
+            </h3>
+          </div>
 
-          <Link href="/demo?challenge=1" className="mc-panel-dark p-4 space-y-2 border-l-4 border-l-[#f97316] hover:border-orange-500 transition">
-            <span className="font-pixel text-[9px] text-orange-400">STAGE 2</span>
-            <h3 className="font-pixel text-xs font-bold text-white">LAVA LAKE BRIDGING</h3>
-            <p className="text-[10px] text-[#94a3b8] font-mono">Crouching edge protection and cobblestone bridging over lava lakes.</p>
-          </Link>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {/* Explorer */}
+            <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 flex flex-col hover:border-cyan-400/50 transition-colors">
+              <div className="flex items-center gap-3 mb-4">
+                <Compass className="w-8 h-8 text-cyan-400" />
+                <div>
+                  <h4 className="text-lg font-bold text-white">🧭 Explorer</h4>
+                  <p className="text-cyan-400 text-xs font-mono uppercase tracking-wider">Navigation</p>
+                </div>
+              </div>
+              <div className="mb-4 inline-flex px-3 py-1 rounded-full bg-slate-950 border border-slate-800 w-fit">
+                <span className="text-[10px] text-slate-300 font-mono">Curriculum PPO</span>
+              </div>
+              <p className="text-sm text-slate-400 mb-6 flex-grow">
+                Masters complex terrain traversal, optimizing pathfinding across varied biomes and overcoming natural obstacles.
+              </p>
+              <div className="pt-4 border-t border-slate-800/50 flex items-center justify-between">
+                <span className="text-xs text-slate-500 font-mono">Unseen Rivers</span>
+                <span className="text-cyan-400 font-mono font-bold">88.5%</span>
+              </div>
+            </div>
 
-          <Link href="/demo?challenge=3" className="mc-panel-dark p-4 space-y-2 border-l-4 border-l-[#a855f7] hover:border-purple-500 transition">
-            <span className="font-pixel text-[9px] text-purple-400">STAGE 3</span>
-            <h3 className="font-pixel text-xs font-bold text-white">NIGHT CREEPER SURVIVAL</h3>
-            <p className="text-[10px] text-[#94a3b8] font-mono">Dynamic day/night cycle, hostile mob proximity tracking, and evasion.</p>
-          </Link>
+            {/* Guardian */}
+            <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 flex flex-col hover:border-purple-400/50 transition-colors">
+              <div className="flex items-center gap-3 mb-4">
+                <Shield className="w-8 h-8 text-purple-400" />
+                <div>
+                  <h4 className="text-lg font-bold text-white">🛡️ Guardian</h4>
+                  <p className="text-purple-400 text-xs font-mono uppercase tracking-wider">Combat</p>
+                </div>
+              </div>
+              <div className="mb-4 inline-flex px-3 py-1 rounded-full bg-slate-950 border border-slate-800 w-fit">
+                <span className="text-[10px] text-slate-300 font-mono">Threat Interception PPO</span>
+              </div>
+              <p className="text-sm text-slate-400 mb-6 flex-grow">
+                Trained to identify, intercept, and neutralize hostile entities before they can breach perimeter defenses.
+              </p>
+              <div className="pt-4 border-t border-slate-800/50 flex items-center justify-between">
+                <span className="text-xs text-slate-500 font-mono">Creeper Elimination</span>
+                <span className="text-purple-400 font-mono font-bold">91.2%</span>
+              </div>
+            </div>
 
-          <Link href="/demo?challenge=4" className="mc-panel-dark p-4 space-y-2 border-l-4 border-l-[#00f0ff] hover:border-cyan-400 transition">
-            <span className="font-pixel text-[9px] text-[#00f0ff]">STAGE 4</span>
-            <h3 className="font-pixel text-xs font-bold text-white">SPEEDRUN ECONOMY</h3>
-            <p className="text-[10px] text-[#94a3b8] font-mono">Wood harvesting, pickaxe crafting, iron mining, and diamond depot delivery.</p>
+            {/* Builder */}
+            <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 flex flex-col hover:border-amber-400/50 transition-colors">
+              <div className="flex items-center gap-3 mb-4">
+                <Hammer className="w-8 h-8 text-amber-400" />
+                <div>
+                  <h4 className="text-lg font-bold text-white">🧱 Builder</h4>
+                  <p className="text-amber-400 text-xs font-mono uppercase tracking-wider">Engineering</p>
+                </div>
+              </div>
+              <div className="mb-4 inline-flex px-3 py-1 rounded-full bg-slate-950 border border-slate-800 w-fit">
+                <span className="text-[10px] text-slate-300 font-mono">Behavioral Cloning + PPO</span>
+              </div>
+              <p className="text-sm text-slate-400 mb-6 flex-grow">
+                Excels at rapid scaffolding, defensive wall placement, and constructing bridging mechanics across chasms.
+              </p>
+              <div className="pt-4 border-t border-slate-800/50 flex items-center justify-between">
+                <span className="text-xs text-slate-500 font-mono">Bridge Construction</span>
+                <span className="text-amber-400 font-mono font-bold">86.4%</span>
+              </div>
+            </div>
+
+            {/* Survivor */}
+            <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 flex flex-col hover:border-emerald-400/50 transition-colors">
+              <div className="flex items-center gap-3 mb-4">
+                <Gem className="w-8 h-8 text-emerald-400" />
+                <div>
+                  <h4 className="text-lg font-bold text-white">💎 Survivor</h4>
+                  <p className="text-emerald-400 text-xs font-mono uppercase tracking-wider">Economy</p>
+                </div>
+              </div>
+              <div className="mb-4 inline-flex px-3 py-1 rounded-full bg-slate-950 border border-slate-800 w-fit">
+                <span className="text-[10px] text-slate-300 font-mono">Multi-Task Economy PPO</span>
+              </div>
+              <p className="text-sm text-slate-400 mb-6 flex-grow">
+                Balances harvesting, crafting, and threat evasion to secure high-value resources with maximum efficiency.
+              </p>
+              <div className="pt-4 border-t border-slate-800/50 flex items-center justify-between">
+                <span className="text-xs text-slate-500 font-mono">Speedrun Completion</span>
+                <span className="text-emerald-400 font-mono font-bold">85.0%</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* SIGNATURE DEMO BANNER */}
+        <section className="w-full max-w-4xl mx-auto">
+          <Link href="/signature-demo" className="block group">
+            <div className="bg-slate-900/80 border border-slate-800 rounded-3xl p-8 flex flex-col sm:flex-row items-center justify-between gap-6 group-hover:border-emerald-500/50 transition-colors overflow-hidden relative">
+              <div className="flex-1 relative z-10">
+                <div className="flex items-center gap-2 mb-2">
+                  <Swords className="w-5 h-5 text-emerald-400" />
+                  <h3 className="text-xl font-bold text-white">Signature Demo: Champion vs Candidate</h3>
+                </div>
+                <p className="text-slate-400 text-sm">
+                  Watch live generalization testing as our established models compete against new training checkpoints in unpredictable environments.
+                </p>
+              </div>
+              <div className="relative z-10 bg-emerald-500/10 text-emerald-400 px-6 py-3 rounded-2xl border border-emerald-500/20 font-semibold group-hover:bg-emerald-500 group-hover:text-slate-950 transition-colors whitespace-nowrap">
+                Watch Battle Arena
+              </div>
+            </div>
           </Link>
-        </div>
-      </section>
+        </section>
+
+        {/* CURRICULUM ARENAS SECTION */}
+        <section className="w-full max-w-6xl mx-auto border-t border-slate-800/50 pt-16">
+          <div className="text-center mb-10">
+            <h2 className="text-2xl font-bold text-white mb-2 flex items-center justify-center gap-2">
+              <Layers className="w-6 h-6 text-emerald-400" />
+              Curriculum Challenge Arenas
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <Link href="/demo?challenge=0" className="bg-slate-900/60 border border-slate-800 hover:border-emerald-400/50 rounded-2xl p-5 transition-all">
+              <span className="text-[10px] font-mono text-emerald-400 uppercase tracking-widest font-bold block mb-2">Stage 1</span>
+              <h3 className="text-sm font-bold text-white mb-2">Precision Parkour</h3>
+              <p className="text-xs text-slate-400 font-mono leading-relaxed">2-block chasm leaps with velocity and sprint momentum management.</p>
+            </Link>
+
+            <Link href="/demo?challenge=1" className="bg-slate-900/60 border border-slate-800 hover:border-orange-400/50 rounded-2xl p-5 transition-all">
+              <span className="text-[10px] font-mono text-orange-400 uppercase tracking-widest font-bold block mb-2">Stage 2</span>
+              <h3 className="text-sm font-bold text-white mb-2">Lava Lake Bridging</h3>
+              <p className="text-xs text-slate-400 font-mono leading-relaxed">Crouching edge protection and cobblestone bridging over lava lakes.</p>
+            </Link>
+
+            <Link href="/demo?challenge=3" className="bg-slate-900/60 border border-slate-800 hover:border-purple-400/50 rounded-2xl p-5 transition-all">
+              <span className="text-[10px] font-mono text-purple-400 uppercase tracking-widest font-bold block mb-2">Stage 3</span>
+              <h3 className="text-sm font-bold text-white mb-2">Night Creeper Survival</h3>
+              <p className="text-xs text-slate-400 font-mono leading-relaxed">Dynamic day/night cycle, hostile mob proximity tracking, and evasion.</p>
+            </Link>
+
+            <Link href="/demo?challenge=4" className="bg-slate-900/60 border border-slate-800 hover:border-cyan-400/50 rounded-2xl p-5 transition-all">
+              <span className="text-[10px] font-mono text-cyan-400 uppercase tracking-widest font-bold block mb-2">Stage 4</span>
+              <h3 className="text-sm font-bold text-white mb-2">Speedrun Economy</h3>
+              <p className="text-xs text-slate-400 font-mono leading-relaxed">Wood harvesting, pickaxe crafting, iron mining, and diamond depot delivery.</p>
+            </Link>
+          </div>
+        </section>
+
+        {/* BOTTOM TECH STACK SECTION */}
+        <section className="w-full max-w-4xl mx-auto pt-16 mt-8 flex flex-col sm:flex-row items-center justify-center gap-8 sm:gap-16 border-t border-slate-800/50 opacity-80">
+          <div className="flex items-center gap-3">
+            <Database className="w-6 h-6 text-emerald-400" />
+            <div className="text-left">
+              <p className="text-xs text-slate-500 font-mono uppercase tracking-wider">Powered By</p>
+              <p className="text-sm font-bold text-slate-300">Pure Neon Serverless PostgreSQL</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <Zap className="w-6 h-6 text-cyan-400" />
+            <div className="text-left">
+              <p className="text-xs text-slate-500 font-mono uppercase tracking-wider">Inference</p>
+              <p className="text-sm font-bold text-slate-300">Client-Side ONNX WASM &lt; 1.5ms</p>
+            </div>
+          </div>
+        </section>
+
+      </main>
     </div>
   );
 }

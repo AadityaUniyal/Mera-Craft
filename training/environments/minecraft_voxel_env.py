@@ -389,9 +389,11 @@ class MinecraftVoxelEnvironment(gym.Env):
         # Creeper AI
         if self.creeper_active:
             to_agent = self.agent_pos[[0, 2]] - self.creeper_pos[[0, 2]]
-            dist_c = np.linalg.norm(to_agent)
+            dist_c = float(np.linalg.norm(to_agent))
             if dist_c > 0.1:
-                self.creeper_pos[[0, 2]] += (to_agent / dist_c) * 0.28
+                step_c = (to_agent / dist_c) * 0.28
+                self.creeper_pos[0] += step_c[0]
+                self.creeper_pos[2] += step_c[1]
             if dist_c < 1.3:
                 self.health -= 0.5
                 reward -= 10.0

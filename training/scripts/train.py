@@ -83,7 +83,7 @@ def train(args):
     # Handle Continuous Training Resumption
     if args.resume and os.path.exists(args.resume):
         print(f"[+] Resuming continuous training from checkpoint: {args.resume}")
-        checkpoint = torch.load(args.resume, map_location=device)
+        checkpoint = torch.load(args.resume, map_location=device, weights_only=True)
         agent.load_state_dict(checkpoint["model_state_dict"])
         if "optimizer_state_dict" in checkpoint:
             optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
@@ -116,7 +116,7 @@ def train(args):
 
     for i, env in enumerate(envs):
         o, _ = env.reset(seed=env_seeds[i])
-        next_obs[i] = torch.tensor(o, dtype=torch.float32)
+        next_obs[i] = torch.tensor(o, dtype=torch.float32, device=device)
 
     current_env_rewards = [0.0] * args.num_envs
     checkpoints_dir = Path(__file__).resolve().parent.parent / "checkpoints"
@@ -156,14 +156,14 @@ def train(args):
                     env_seeds[i] += 50
                     o, _ = env.reset(seed=env_seeds[i])
 
-                next_obs[i] = torch.tensor(o, dtype=torch.float32)
+                next_obs[i] = torch.tensor(o, dtype=torch.float32, device=device)
                 next_done[i] = 1.0 if done else 0.0
 
         # Generalized Advantage Estimation (GAE)
         with torch.no_grad():
-            next_value = agent.get_value(next_obs).reshape(1, -1)
-            advantages = torch.zeros_like(rewards_buf).to(device)
-            lastgaelam = 0
+            next_value = agent.get_value(next_obs).flatten()
+            advantages = torch.zeros_like(rewards_buf, device=device)
+            lastgaelam = 0.0
             for t in reversed(range(args.num_steps)):
                 if t == args.num_steps - 1:
                     nextnonterminal = 1.0 - next_done

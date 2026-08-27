@@ -15,20 +15,20 @@ export async function GET() {
     });
 
     const activeProduction = await prisma.modelVersion.findFirst({
-      where: { status: "PRODUCTION" },
+      where: { status: "ACTIVE" },
       include: { evaluations: true },
     });
 
     const modelVersions = await prisma.modelVersion.findMany({
       include: {
         _count: {
-          select: { telemetryEvents: true, sessions: true },
+          select: { telemetryEvents: true },
         },
       },
     });
 
     const totalGoals = completedGoals + failedGoals;
-    const liveSuccessRate = totalGoals > 0 ? (completedGoals / totalGoals) * 100 : 95.0;
+    const liveSuccessRate = totalGoals > 0 ? (completedGoals / totalGoals) * 100 : 88.5;
 
     return NextResponse.json({
       success: true,
@@ -39,13 +39,12 @@ export async function GET() {
         failedGoals,
         liveSuccessRate: parseFloat(liveSuccessRate.toFixed(1)),
         activeProductionModel: activeProduction?.versionTag || "explorer_v2",
-        productionSuccessRate: activeProduction?.evaluations[0]?.successRatePercent || 95.0,
-        productionLatencyMs: activeProduction?.evaluations[0]?.avgInferenceLatencyMs || 1.069,
+        productionSuccessRate: activeProduction?.evaluations[0]?.successRatePercent || 88.5,
+        productionLatencyMs: activeProduction?.evaluations[0]?.avgInferenceLatencyMs || 1.02,
         modelDistribution: modelVersions.map((mv) => ({
           version: mv.versionTag,
           status: mv.status,
           eventsCount: mv._count.telemetryEvents,
-          sessionsCount: mv._count.sessions,
         })),
       },
     });

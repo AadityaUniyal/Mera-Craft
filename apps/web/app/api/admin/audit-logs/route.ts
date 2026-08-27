@@ -36,7 +36,7 @@ export async function GET(req: NextRequest) {
   } catch (error: any) {
     console.error("Audit log query error:", error);
     return NextResponse.json(
-      { error: "Database error querying audit logs" },
+      { error: "Internal Server Error" },
       { status: 500 }
     );
   }

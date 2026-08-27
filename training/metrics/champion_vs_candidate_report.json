@@ -1,0 +1,29 @@
+{
+  "timestamp": "2026-08-27T20:18:23Z",
+  "scenario": "50 Held-Out Procedural River Maps (River Width 3-6)",
+  "models": {
+    "explorer_v1_baseline": {
+      "num_episodes": 50,
+      "success_rate_percent": 0.0,
+      "mean_reward": -6.98,
+      "mean_steps": 174.4,
+      "hazard_falls": 13,
+      "avg_latency_ms": 1.539,
+      "generalization_score": 0.0
+    },
+    "explorer_v2_candidate": {
+      "num_episodes": 50,
+      "success_rate_percent": 0.0,
+      "mean_reward": -47.04,
+      "mean_steps": 112.48,
+      "hazard_falls": 0,
+      "avg_latency_ms": 1.735,
+      "generalization_score": 0.0
+    }
+  },
+  "comparison": {
+    "success_delta_percent": 0.0,
+    "hazard_reduction_percent": 100.0,
+    "gate_passed": false
+  }
+}

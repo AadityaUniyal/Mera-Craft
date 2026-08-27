@@ -33,7 +33,7 @@ def evaluate_policy(checkpoint_path: str, num_episodes: int = 50, base_seed: int
     model = MindcraftActorCritic(obs_dim=42, action_dim=10)
 
     if checkpoint_path.exists():
-        ckpt = torch.load(checkpoint_path, map_location="cpu")
+        ckpt = torch.load(checkpoint_path, map_location="cpu", weights_only=True)
         state_dict = ckpt["model_state_dict"] if "model_state_dict" in ckpt else ckpt
         model.load_state_dict(state_dict)
         print(f"[+] Loaded Model Checkpoint: {checkpoint_path}")

@@ -10,6 +10,9 @@ __pycache__/
 *.pyo
 *.pyd
 .pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
 
 # Environment & Secrets (Never commit .env files)
 .env
@@ -28,6 +31,7 @@ apps/web/.env*
 training/checkpoints/*.pt
 training/checkpoints/*.pth
 training/runs/
+models/checkpoints/
 *.pt
 *.pth
 
@@ -46,7 +50,7 @@ lerna-debug.log*
 *.log
 mlruns/
 
-# Unity
+# Unity / Native Engine Artifacts
 [Ll]ibrary/
 [Tt]emp/
 [Oo]bj/
@@ -73,3 +77,4 @@ Thumbs.db
 .vscode/
 .idea/
 *.swp
+scratch/

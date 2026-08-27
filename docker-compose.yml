@@ -10,19 +10,29 @@ services:
     environment:
       - NODE_ENV=production
       - NEXT_PUBLIC_APP_URL=http://localhost:3000
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-mindcraft_user}:${POSTGRES_PASSWORD:-mindcraft_password}@db:5432/${POSTGRES_DB:-mindcraft}?sslmode=disable
+      - JWT_SECRET=${JWT_SECRET:-mindcraft_jwt_default_secret_key_change_in_prod}
+    depends_on:
+      db:
+        condition: service_healthy
     restart: unless-stopped
 
   db:
     image: postgres:16-alpine
     restart: always
     environment:
-      POSTGRES_USER: mindcraft_user
-      POSTGRES_PASSWORD: mindcraft_password
-      POSTGRES_DB: mindcraft
+      POSTGRES_USER: ${POSTGRES_USER:-mindcraft_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-mindcraft_password}
+      POSTGRES_DB: ${POSTGRES_DB:-mindcraft}
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-mindcraft_user} -d ${POSTGRES_DB:-mindcraft}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
 volumes:
   postgres_data:

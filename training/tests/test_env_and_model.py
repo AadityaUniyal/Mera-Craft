@@ -100,7 +100,7 @@ def test_checkpoint_save_and_resume(tmp_path):
         "history": {"timesteps": [5000], "mean_rewards": [12.5]}
     }, save_path)
 
-    loaded = torch.load(save_path, map_location="cpu")
+    loaded = torch.load(save_path, map_location="cpu", weights_only=True)
     assert loaded["global_step"] == 5000
     assert "model_state_dict" in loaded
     assert loaded["history"]["mean_rewards"] == [12.5]

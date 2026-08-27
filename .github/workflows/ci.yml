@@ -31,7 +31,7 @@ jobs:
 
       - name: Verify Model Export Parity
         run: |
-          python training/scripts/export_onnx.py
+          python training/scripts/export.py
 
   build-web:
     name: Web Application Build & Typecheck
@@ -52,6 +52,10 @@ jobs:
       - name: Install Web Dependencies
         working-directory: apps/web
         run: npm ci
+
+      - name: Generate Prisma Client
+        working-directory: apps/web
+        run: npx prisma generate
 
       - name: Build Next.js Web App
         working-directory: apps/web

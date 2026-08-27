@@ -122,7 +122,13 @@ export default function DemoPage() {
             </span>
           </div>
           <p className="text-xs text-slate-400 font-mono mt-1">
-            Interactive Manipulation &bull; Web Audio Synthesizer &bull; Multi-Camera POV Modes &bull; Base Hub Delivery
+            Active Character: <span className="text-white font-bold">{
+              modelVersion === "explorer_v2" ? "🧭 Explorer (Curriculum PPO)"
+              : modelVersion === "guardian_v1" ? "🛡️ Guardian (Threat Interception)"
+              : modelVersion === "builder_v1" ? "🧱 Builder (Behavioral Cloning + PPO)"
+              : modelVersion === "explorer_v1" ? "⚠️ Explorer v1 (Baseline)"
+              : "💎 Survivor (Multi-Task Economy)"
+            }</span> &bull; God-Mode Clicking &bull; Multi-Camera POV &bull; Web Audio Synth
           </p>
         </div>
 

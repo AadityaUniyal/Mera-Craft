@@ -58,16 +58,19 @@ export default function PlaybackControls({
 }: PlaybackControlsProps) {
   const speeds = [0.5, 1.0, 2.0, 5.0];
   const models = [
-    { id: "master_v6_minecraft", label: "Minecraft Master v6 (10 Actions & Bridging)" },
-    { id: "master_v5_pro", label: "Master-v5 Pro (36-dim Residual Brain)" },
-    { id: "explorer_v2", label: "Explorer-v2 (Navigation Baseline)" },
+    { id: "explorer_v2", label: "🧭 Explorer v2 — Curriculum PPO (River Crosser)", character: "Explorer" },
+    { id: "guardian_v1", label: "🛡️ Guardian v1 — Threat Interception PPO", character: "Guardian" },
+    { id: "builder_v1", label: "🧱 Builder v1 — Behavioral Cloning + PPO", character: "Builder" },
+    { id: "master_v6_minecraft", label: "💎 Survivor v6 — Multi-Task Economy PPO", character: "Survivor" },
+    { id: "explorer_v1", label: "⚠️ Explorer v1 — Baseline (Untrained)", character: "Explorer" },
   ];
 
   const tools: { id: InteractionMode; label: string; icon: any }[] = [
-    { id: "relocate_target", label: "Place Diamond", icon: Sparkles },
+    { id: "relocate_target", label: "Move Diamond", icon: Sparkles },
     { id: "place_obstacle", label: "Place Wall", icon: Box },
     { id: "place_lava", label: "Place Lava", icon: Flame },
-    { id: "teleport_agent", label: "Move Player", icon: Compass },
+    { id: "spawn_creeper", label: "Spawn Creeper", icon: Zap },
+    { id: "teleport_agent", label: "Teleport Agent", icon: Compass },
   ];
 
   return (

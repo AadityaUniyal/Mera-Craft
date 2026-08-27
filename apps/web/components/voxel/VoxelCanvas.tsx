@@ -785,5 +785,86 @@ export default function VoxelCanvas({
     return () => clearInterval(interval);
   }, [isPlaying, speed, stepSimulation]);
 
-  return <div ref={mountRef} className="w-full h-full cursor-crosshair" />;
+  // God-Mode Click Handler: Three.js Raycaster for interactive world editing
+  const handleCanvasClick = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
+    if (!mountRef.current || !cameraRef.current || !rendererRef.current) return;
+
+    const rect = mountRef.current.getBoundingClientRect();
+    const mouse = new THREE.Vector2(
+      ((event.clientX - rect.left) / rect.width) * 2 - 1,
+      -((event.clientY - rect.top) / rect.height) * 2 + 1
+    );
+
+    const raycaster = new THREE.Raycaster();
+    raycaster.setFromCamera(mouse, cameraRef.current);
+
+    // Raycast against a virtual ground plane at y = 0
+    const groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0.5);
+    const hitPoint = new THREE.Vector3();
+    raycaster.ray.intersectPlane(groundPlane, hitPoint);
+
+    if (!hitPoint) return;
+
+    const gx = Math.floor(hitPoint.x);
+    const gz = Math.floor(hitPoint.z);
+    const s = simState.current;
+
+    if (gx < 1 || gx >= s.gridSize - 1 || gz < 1 || gz >= s.gridSize - 1) return;
+
+    switch (interactionMode) {
+      case "relocate_target":
+        if (s.grid[gx][gz] !== 3 && s.grid[gx][gz] !== 7 && s.grid[gx][gz] !== 8) {
+          s.targetPos = [gx + 0.5, 0.0, gz + 0.5];
+          if (targetMeshRef.current) {
+            targetMeshRef.current.position.set(gx + 0.5, 0.6, gz + 0.5);
+          }
+          if (soundEnabled) soundSynth.playDiamondChime();
+        }
+        break;
+
+      case "place_obstacle":
+        if (s.grid[gx][gz] === 1 || s.grid[gx][gz] === 0) {
+          s.grid[gx][gz] = 3; // stone obstacle
+          if (soundEnabled) soundSynth.playBlockPlace();
+          generateWorld();
+        }
+        break;
+
+      case "place_lava":
+        if (s.grid[gx][gz] === 1 || s.grid[gx][gz] === 0) {
+          s.grid[gx][gz] = 8; // lava hazard
+          if (soundEnabled) soundSynth.playBlockPlace();
+          generateWorld();
+        }
+        break;
+
+      case "spawn_creeper":
+        s.creeperActive = true;
+        s.creeperPos = [gx + 0.5, 0.0, gz + 0.5];
+        if (creeperMeshRef.current) {
+          creeperMeshRef.current.position.set(gx + 0.5, 0.0, gz + 0.5);
+          creeperMeshRef.current.visible = true;
+        }
+        if (soundEnabled) soundSynth.playCreeperHiss();
+        break;
+
+      case "teleport_agent":
+        if (s.grid[gx][gz] !== 3 && s.grid[gx][gz] !== 7 && s.grid[gx][gz] !== 8) {
+          s.agentPos = [gx + 0.5, 0.0, gz + 0.5];
+          if (agentMeshRef.current) {
+            agentMeshRef.current.position.set(gx + 0.5, 0.0, gz + 0.5);
+          }
+          if (soundEnabled) soundSynth.playFootstep();
+        }
+        break;
+    }
+  }, [interactionMode, soundEnabled, generateWorld]);
+
+  return (
+    <div
+      ref={mountRef}
+      className="w-full h-full cursor-crosshair"
+      onClick={handleCanvasClick}
+    />
+  );
 }

@@ -3,19 +3,38 @@ import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { signToken } from "@/lib/auth";
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export async function POST(req: NextRequest) {
   try {
-    const { email, password, displayName } = await req.json();
+    const body = await req.json().catch(() => null);
+    if (!body) {
+      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    }
 
-    if (!email || !password || password.length < 6) {
+    const { email, password, displayName } = body;
+
+    if (!email || typeof email !== "string" || !EMAIL_REGEX.test(email.trim())) {
       return NextResponse.json(
-        { error: "Valid email and password (min 6 chars) required" },
+        { error: "A valid email address is required" },
         { status: 400 }
       );
     }
 
+    if (!password || typeof password !== "string" || password.length < 8) {
+      return NextResponse.json(
+        { error: "Password must be at least 8 characters long" },
+        { status: 400 }
+      );
+    }
+
+    const cleanEmail = email.toLowerCase().trim();
+    const cleanDisplayName = displayName && typeof displayName === "string" 
+      ? displayName.trim().slice(0, 50) 
+      : cleanEmail.split("@")[0].slice(0, 50);
+
     const existing = await prisma.user.findUnique({
-      where: { email: email.toLowerCase().trim() },
+      where: { email: cleanEmail },
     });
 
     if (existing) {
@@ -29,12 +48,12 @@ export async function POST(req: NextRequest) {
 
     const user = await prisma.user.create({
       data: {
-        email: email.toLowerCase().trim(),
+        email: cleanEmail,
         passwordHash,
         role: "USER",
         profile: {
           create: {
-            displayName: displayName || email.split("@")[0],
+            displayName: cleanDisplayName,
           },
         },
       },
@@ -61,6 +80,7 @@ export async function POST(req: NextRequest) {
     response.cookies.set("mindcraft_auth", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
       maxAge: 60 * 60 * 24 * 7,
       path: "/",
     });

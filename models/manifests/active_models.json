@@ -1,0 +1,35 @@
+{
+  "active_models": [
+    {
+      "version_tag": "explorer_v2",
+      "artifact_uri": "/models/explorer_v2.onnx",
+      "sha256": "ec89cb656f85f7a972d772d60e4c7ae89408bc6247959a2eb4800283dd4a1cb4",
+      "file_size_kb": 1255.5
+    },
+    {
+      "version_tag": "guardian_v1",
+      "artifact_uri": "/models/guardian_v1.onnx",
+      "sha256": "ec89cb656f85f7a972d772d60e4c7ae89408bc6247959a2eb4800283dd4a1cb4",
+      "file_size_kb": 1255.5
+    },
+    {
+      "version_tag": "builder_v1",
+      "artifact_uri": "/models/builder_v1.onnx",
+      "sha256": "ec89cb656f85f7a972d772d60e4c7ae89408bc6247959a2eb4800283dd4a1cb4",
+      "file_size_kb": 1255.5
+    },
+    {
+      "version_tag": "explorer_v1_baseline",
+      "artifact_uri": "/models/explorer_v1.onnx",
+      "sha256": "832cde78e59c4591532335ee3048a04cc9a80c34a131bae091f1cf5a912ee02d",
+      "file_size_kb": 329.16
+    },
+    {
+      "version_tag": "master_v6_minecraft",
+      "artifact_uri": "/models/master_v6_minecraft.onnx",
+      "sha256": "264318b30e1c56c4175ea35a99e8ec6948223f0fb1b368c1846ea69c9e12e09a",
+      "file_size_kb": 1255.5
+    }
+  ],
+  "timestamp": "2026-08-28T00:00:00Z"
+}

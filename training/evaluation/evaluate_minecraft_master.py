@@ -39,7 +39,7 @@ def evaluate_minecraft_master_policy(
     agent = MinecraftActorCritic(obs_dim=42, action_dim=10).to(device)
 
     if os.path.exists(model_path):
-        checkpoint = torch.load(model_path, map_location=device, weights_only=False)
+        checkpoint = torch.load(model_path, map_location=device, weights_only=True)
         agent.load_state_dict(checkpoint["model_state_dict"])
         print("[+] Checkpoint loaded successfully.")
     agent.eval()

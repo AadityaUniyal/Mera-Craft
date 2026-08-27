@@ -14,67 +14,72 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { targetVersionTag } = await req.json();
+    const body = await req.json().catch(() => null);
+    const characterId = body?.characterId;
+    const targetVersionTag = body?.targetVersionTag;
 
+    // Find viable rollback model (RETIRED or APPROVED)
     const targetModel = await prisma.modelVersion.findFirst({
-      where: targetVersionTag ? { versionTag: targetVersionTag } : { status: "APPROVED" },
+      where: {
+        ...(characterId ? { characterId } : {}),
+        ...(targetVersionTag ? { versionTag: targetVersionTag } : { status: "RETIRED" }),
+      },
       orderBy: { publishedAt: "desc" },
-      include: { model: true },
+      include: { character: true },
     });
 
     if (!targetModel) {
       return NextResponse.json(
-        { error: "No viable approved previous model version found for rollback." },
+        { error: "No viable previous model version found for rollback." },
         { status: 404 }
       );
     }
 
-    const currentProd = await prisma.modelVersion.findFirst({
-      where: { status: "PRODUCTION" },
-    });
-
-    // Demote current production model to ARCHIVED or APPROVED
-    if (currentProd) {
-      await prisma.modelVersion.update({
-        where: { id: currentProd.id },
-        data: { status: "APPROVED", retiredAt: new Date() },
+    // Atomic rollback using transaction
+    const rolledBack = await prisma.$transaction(async (tx) => {
+      // 1. Demote current active model
+      await tx.modelVersion.updateMany({
+        where: { characterId: targetModel.characterId, status: "ACTIVE" },
+        data: { status: "RETIRED", retiredAt: new Date() },
       });
-    }
 
-    // Promote target model
-    const rolledBack = await prisma.modelVersion.update({
-      where: { id: targetModel.id },
-      data: {
-        status: "PRODUCTION",
-        publishedAt: new Date(),
-      },
-    });
-
-    // Write Audit Log
-    await prisma.auditLog.create({
-      data: {
-        actorId: auth.user.id,
-        action: "MODEL_ROLLED_BACK",
-        targetType: "ModelVersion",
-        targetId: targetModel.id,
-        details: {
-          previousProduction: currentProd?.versionTag,
-          activeProduction: targetModel.versionTag,
-          reason: "Manual admin emergency rollback",
-          executedBy: auth.user.email,
+      // 2. Promote rollback model back to ACTIVE
+      const updated = await tx.modelVersion.update({
+        where: { id: targetModel.id },
+        data: {
+          status: "ACTIVE",
+          publishedAt: new Date(),
+          canaryPercent: 100,
         },
-      },
+      });
+
+      // 3. Write Audit Log
+      await tx.auditLog.create({
+        data: {
+          actorId: auth.user.id,
+          action: "MODEL_ROLLED_BACK",
+          targetType: "ModelVersion",
+          targetId: targetModel.id,
+          details: {
+            character: targetModel.character.name,
+            restoredVersion: targetModel.versionTag,
+            timestamp: new Date().toISOString(),
+          },
+        },
+      });
+
+      return updated;
     });
 
     return NextResponse.json({
       success: true,
-      message: `Emergency rollback successful. ${targetModel.versionTag} is now active PRODUCTION.`,
-      model: rolledBack,
+      message: `Successfully rolled back to version ${targetModel.versionTag} for ${targetModel.character.name}.`,
+      restoredModel: rolledBack,
     });
-  } catch (error: any) {
-    console.error("Rollback error:", error);
+  } catch (err: any) {
+    console.error("[-] Error during model rollback:", err);
     return NextResponse.json(
-      { error: "Internal server error executing rollback" },
+      { error: "Internal Server Error during rollback execution" },
       { status: 500 }
     );
   }

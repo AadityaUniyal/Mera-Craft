@@ -92,7 +92,7 @@ def train_minecraft_master_policy(
 
     for i, env in enumerate(envs):
         o, _ = env.reset(seed=env_seeds[i])
-        next_obs[i] = torch.tensor(o, dtype=torch.float32)
+        next_obs[i] = torch.tensor(o, dtype=torch.float32, device=device)
 
     current_env_rewards = [0.0] * num_envs
 
@@ -125,14 +125,14 @@ def train_minecraft_master_policy(
                     env_seeds[i] += 100
                     o, _ = env.reset(seed=env_seeds[i])
 
-                next_obs[i] = torch.tensor(o, dtype=torch.float32)
+                next_obs[i] = torch.tensor(o, dtype=torch.float32, device=device)
                 next_done[i] = 1.0 if done else 0.0
 
         # GAE Calculation
         with torch.no_grad():
-            next_value = agent.get_value(next_obs).reshape(1, -1)
-            advantages = torch.zeros_like(rewards_buf).to(device)
-            lastgaelam = 0
+            next_value = agent.get_value(next_obs).flatten()
+            advantages = torch.zeros_like(rewards_buf, device=device)
+            lastgaelam = 0.0
             for t in reversed(range(num_steps)):
                 if t == num_steps - 1:
                     nextnonterminal = 1.0 - next_done

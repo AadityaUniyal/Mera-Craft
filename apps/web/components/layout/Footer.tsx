@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Bot, Terminal, Shield, Layers, Cpu } from "lucide-react";
 
-export default function Footer() {
+export function Footer() {
   const pathname = usePathname();
   
   // Hide footer on full-screen game page
@@ -55,3 +55,5 @@ export default function Footer() {
     </footer>
   );
 }
+
+export default Footer;
