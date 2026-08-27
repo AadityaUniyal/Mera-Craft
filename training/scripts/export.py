@@ -45,20 +45,23 @@ def export_model_to_onnx(checkpoint_path: str | Path, output_path: str | Path, o
     dummy_input = torch.randn(1, obs_dim, dtype=torch.float32)
 
     print(f"[*] Exporting ONNX to: {output_path}")
-    torch.onnx.export(
-        model,
-        dummy_input,
-        str(output_path),
-        export_params=True,
-        opset_version=14,
-        do_constant_folding=True,
-        input_names=["observation"],
-        output_names=["action_probabilities"],
-        dynamic_axes={
+    export_kwargs = {
+        "export_params": True,
+        "opset_version": 14,
+        "do_constant_folding": True,
+        "input_names": ["observation"],
+        "output_names": ["action_probabilities"],
+        "dynamic_axes": {
             "observation": {0: "batch_size"},
             "action_probabilities": {0: "batch_size"},
         },
-    )
+    }
+    
+    # Force TorchScript backend if dynamo is default in newer PyTorch
+    try:
+        torch.onnx.export(model, dummy_input, str(output_path), dynamo=False, **export_kwargs)
+    except TypeError:
+        torch.onnx.export(model, dummy_input, str(output_path), **export_kwargs)
 
     file_size_kb = output_path.stat().st_size / 1024
     print(f"[+] ONNX Export Verified: {output_path} ({file_size_kb:.1f} KB)")

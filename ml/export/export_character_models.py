@@ -54,20 +54,22 @@ def export_model_to_onnx(
     model.eval()
     dummy_input = torch.randn(1, 42, dtype=torch.float32)
 
-    torch.onnx.export(
-        model,
-        dummy_input,
-        output_onnx_path,
-        export_params=True,
-        opset_version=14,
-        do_constant_folding=True,
-        input_names=["observation"],
-        output_names=["action_probabilities"],
-        dynamic_axes={
+    export_kwargs = {
+        "export_params": True,
+        "opset_version": 14,
+        "do_constant_folding": True,
+        "input_names": ["observation"],
+        "output_names": ["action_probabilities"],
+        "dynamic_axes": {
             "observation": {0: "batch_size"},
             "action_probabilities": {0: "batch_size"},
         },
-    )
+    }
+
+    try:
+        torch.onnx.export(model, dummy_input, output_onnx_path, dynamo=False, **export_kwargs)
+    except TypeError:
+        torch.onnx.export(model, dummy_input, output_onnx_path, **export_kwargs)
 
     # Copy to web public
     shutil.copy2(output_onnx_path, web_public_path)
