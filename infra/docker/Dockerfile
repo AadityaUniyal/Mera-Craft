@@ -1,4 +1,3 @@
-# MINDCRAFT — Web Application Dockerfile
 FROM node:22-alpine AS base
 
 # Install dependencies
