@@ -6,10 +6,6 @@ using Mindcraft.Environment;
 
 namespace Mindcraft.Bridge
 {
-    /// <summary>
-    /// Bidirectional JavaScript-to-C# bridge for Unity WebGL in Next.js.
-    /// Emits structured telemetry events to the web frontend and receives control commands.
-    /// </summary>
     public class WebGLBridge : MonoBehaviour
     {
         [DllImport("__Internal")]
