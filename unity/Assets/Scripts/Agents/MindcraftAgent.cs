@@ -4,11 +4,6 @@ using UnityEngine;
 
 namespace Mindcraft.Agents
 {
-    /// <summary>
-    /// Mindcraft Embodied AI Agent component.
-    /// Handles sensory raycasts, discrete action mapping, distance rewards, and WebGL telemetry dispatch.
-    /// Compatible with Unity ML-Agents and Sentis inference.
-    /// </summary>
     public class MindcraftAgent : MonoBehaviour
     {
         public enum ActionType
